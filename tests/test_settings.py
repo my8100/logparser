@@ -4,6 +4,8 @@ import os
 from shutil import copy
 import time
 
+from scrapy import __version__ as scrapy_version
+
 from tests.demo_log import END
 from tests.utils import cst
 
@@ -56,6 +58,18 @@ def test_parse_round_interval(psr):
         # parse for first time, sleep interval, parse for second time, exit
         psr(parse_round_interval=interval, exit_timeout=exit_timeout)
         assert time.time() - start_time > interval
+
+
+# ENABLE_TELNET = True
+def test_auto_disable_telnet(psr):
+    parser = psr(execute_main=False, enable_telnet=True)
+    if scrapy_version > '1.5.1':
+        assert not parser.ENABLE_TELNET
+    else:
+        assert parser.ENABLE_TELNET
+
+    parser = psr(execute_main=False, enable_telnet=False)
+    assert not parser.ENABLE_TELNET
 
 
 # LOG_ENCODING = 'utf-8'

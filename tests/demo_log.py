@@ -16,6 +16,8 @@ SHUTDOWN = u"""2019-01-01 00:00:01 [scrapy.crawler] INFO: Received SIGTERM, shut
 2019-01-01 00:00:01 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
 {
  'finish_reason': 'shutdown',
+ "robotstxt/exception_count/<class 'twisted.internet.error.TCPTimedOutError'>": 1,
+ 'start_time': datetime.datetime(2019, 3, 9, 13, 55, 24, 601697)
 }
 2019-01-01 00:00:01 [scrapy.core.engine] INFO: Spider closed (finished)"""
 

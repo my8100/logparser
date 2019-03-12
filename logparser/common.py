@@ -1,5 +1,10 @@
 # coding: utf8
+from collections import OrderedDict
+import json
+from datetime import datetime
 import re
+import time
+import traceback
 
 
 # LINESEP_PATTERN = re.compile(r'%s' % os.linesep)
@@ -32,9 +37,11 @@ for k, v in LOG_CATEGORIES_PATTERN_DICT.items():
                    """.format(time_=DATETIME_PATTERN, pattern=v), re.X | re.S)       # re.S: . matches new line
     LOG_CATEGORIES_PATTERN_DICT[k] = p
 
+# 2019-01-01 00:00:01 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:6023
 # 2019-01-01 00:00:01 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
 # {'downloader/exception_count': 3,
 LATEST_MATCHES_PATTERN_DICT = dict(
+    telnet_console=r'Telnet[ ]console[ ]listening[ ]on',   # Telnet console listening on 127.0.0.1:6023
     resuming_crawl=r'Resuming[ ]crawl',          # Resuming crawl (675840 requests scheduled)
     latest_offsite=r'Filtered[ ]offsite',        # Filtered offsite request to 'www.baidu.com'
     latest_duplicate=r'Filtered[ ]duplicate',    # Filtered duplicate request: <GET http://httpbin.org/headers>
@@ -57,13 +64,13 @@ SIGTERM_PATTERN = re.compile(r'^%s[ ].+?:[ ](Received[ ]SIGTERM([ ]twice)?),' % 
 RESPONSE_STATUS_PATTERN = re.compile(r"'downloader/response_status_count/\d{3}':[ ](?P<count>\d+),")
 RESPONSE_STATUS_REDIRECT_PATTERN = re.compile(r"'downloader/response_status_count/3\d{2}':[ ](?P<count>\d+),")
 
-STATS_DUMPED_PATTERN_DICT = dict(
-    critical_logs=r"'log_count/CRITICAL'",
-    error_logs=r"'log_count/ERROR'",
-    warning_logs=r"'log_count/WARNING'",
-    # redirect_logs= , use RESPONSE_STATUS_REDIRECT_PATTERN instead
-    retry_logs=r"'retry/count'",
-    ignore_logs=r"'httperror/response_ignored_count'",
+STATS_DUMPED_CATEGORIES_DICT = dict(
+    critical_logs='log_count/CRITICAL',
+    error_logs='log_count/ERROR',
+    warning_logs='log_count/WARNING',
+    # redirect_logs= ,
+    retry_logs='retry/count',
+    ignore_logs='httperror/response_ignored_count',
 )
 
 # 2019-01-01 00:00:01 [scrapy.core.engine] INFO: Closing spider (finished)
@@ -72,14 +79,13 @@ STATS_DUMPED_PATTERN_DICT = dict(
 # }
 # 2019-01-01 00:00:01 [scrapy.core.engine] INFO: Spider closed (finished)
 PATTERN_LOG_ENDING = re.compile(r"""
-                                %s[ ][^\n]+?
-                                (Dumping[ ]Scrapy[ ]stats:.*?\{.+?\}.*
+                                (%s)[ ][^\n]+?
+                                (Dumping[ ]Scrapy[ ]stats:.*?(\{.+?\}).*
                                 |INFO:[ ]Spider[ ]closed.*)
                                 """ % DATETIME_PATTERN, re.X | re.S)
 
 
-class Constant(object):
-
+class Common(object):
     NA = 'N/A'
 
     LINESEP_PATTERN = LINESEP_PATTERN
@@ -93,5 +99,59 @@ class Constant(object):
     SIGTERM_PATTERN = SIGTERM_PATTERN
     RESPONSE_STATUS_PATTERN = RESPONSE_STATUS_PATTERN
     RESPONSE_STATUS_REDIRECT_PATTERN = RESPONSE_STATUS_REDIRECT_PATTERN
-    STATS_DUMPED_PATTERN_DICT = STATS_DUMPED_PATTERN_DICT
+    STATS_DUMPED_CATEGORIES_DICT = STATS_DUMPED_CATEGORIES_DICT
     PATTERN_LOG_ENDING = PATTERN_LOG_ENDING
+
+    @staticmethod
+    def get_current_time_timestamp():
+        current_timestamp = int(time.time())
+        current_time = datetime.fromtimestamp(current_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        return current_time, current_timestamp
+
+    def get_ordered_dict(self, adict, source):
+        odict = OrderedDict(source=source)
+        odict['last_update_time'], odict['last_update_timestamp'] = self.get_current_time_timestamp()
+        for key in sorted(adict.keys()):
+            odict[key] = adict[key]
+        return odict
+
+    @staticmethod
+    def parse_crawler_stats(text):
+        # 'start_time': datetime.datetime(2019, 3, 9, 13, 55, 24, 601697)
+        # "robotstxt/exception_count/<class 'twisted.internet.error.TCPTimedOutError'>": 1,
+        backup = text
+        text = re.sub(r'(".*?)\'(.*?)\'(.*?")', r'\1_\2_\3', text)
+        text = re.sub(r"'(.+?)'", r'"\1"', text)
+        text = re.sub(r'(datetime.datetime\(.+?\))', r'"\1"', text)
+        try:
+            return json.loads(text)
+        except ValueError as err:
+            print(text)
+            print(traceback.format_exc())
+            return dict(json_loads_error=err, stats=backup)
+
+    def update_data_with_crawler_stats(self, data, crawler_stats, update_log_count):
+        # 'downloader/response_count': 4,
+        # 'downloader/response_status_count/200': 2,
+        # 'downloader/response_status_count/302': 1,
+        # 'downloader/response_status_count/404': 1,
+        # 'finish_reason': 'closespider_timeout',
+        # 'item_scraped_count': 2,
+        # 'response_received_count': 3,
+        data['finish_reason'] = crawler_stats.get('finish_reason', data['finish_reason'])
+        data['pages'] = crawler_stats.get('response_received_count', data['pages'])
+        data['items'] = crawler_stats.get('item_scraped_count', data['items'])
+
+        if not update_log_count:
+            return
+        redirect_count = 0
+        for key, value in crawler_stats.items():
+            if key.startswith('downloader/response_status_count/3'):
+                redirect_count += value
+        if redirect_count > 0:
+            data['log_categories']['redirect_logs']['count'] = redirect_count
+
+        for level, key in self.STATS_DUMPED_CATEGORIES_DICT.items():
+            count = crawler_stats.get(key, 0)
+            if count > 0:
+                data['log_categories'][level]['count'] = count

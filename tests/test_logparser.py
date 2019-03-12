@@ -10,9 +10,11 @@ from tests.utils import cst
 # {
 # "status": "ok",
 # "datas": {},
-# "logparser_version": "0.8.0",
+# "settings_py": "logparser/logparser/settings.py",
+# "settings": {...},
+# "last_update_timestamp": "1546272001"
 # "last_update_time": "2019-01-01 00:00:01"
-# "last_update_time": "2019-01-01 00:00:01"
+# "logparser_version": "0.8.1",
 # }
 def test_empty_logs_dir(psr):
     parser = psr(execute_main=False)
@@ -25,7 +27,8 @@ def test_empty_logs_dir(psr):
     assert os.path.exists(cst.STATS_JSON_PATH)
     stats = cst.read_data(cst.STATS_JSON_PATH)
     default_stats = dict(status='ok', datas={}, logparser_version=cst.LOGPARSER_VERSION)
-    assert len(stats) == 5
+    assert set(stats.keys()) == {'status', 'datas', 'settings_py', 'settings',
+                                 'last_update_timestamp', 'last_update_time', 'logparser_version'}
     for k, v in default_stats.items():
         assert stats[k] == v
     # last_update_time, comes from last_update_timestamp
@@ -91,6 +94,22 @@ def test_new_file_read_data(psr):
         log_data = cst.read_data(cst.LOG_JSON_PATH)
         assert log_data['last_update_timestamp'] == last_update_timestamp
         cst.check_demo_data(log_data)
+
+    # Old logfile with smaller size
+    cst.write_text(cst.LOG_PATH, FRONT + END.replace('memory', ''))
+    parser.main()
+    log_data = cst.read_data(cst.LOG_JSON_PATH)
+    assert log_data['last_update_timestamp'] == last_update_timestamp
+    cst.check_demo_data(log_data)
+    stats = cst.read_data(cst.STATS_JSON_PATH)
+    assert cst.PROJECT not in stats['datas']
+    # -> parse in next round
+    parser.main()
+    log_data = cst.read_data(cst.LOG_JSON_PATH)
+    assert log_data['last_update_timestamp'] > last_update_timestamp
+    cst.check_demo_data(log_data)
+    stats = cst.read_data(cst.STATS_JSON_PATH)
+    assert cst.PROJECT in stats['datas']
 
     # Read data fail
     time.sleep(2)
@@ -220,6 +239,8 @@ def test_appended_log(psr):
             assert data['first_log_time'] == cst.NA
             assert not data['_head']
         assert data['finish_reason'] == cst.NA
+        assert data['pages'] is None
+        assert data['items'] is None
 
     cst.write_text(cst.LOG_PATH, front_head, append=True)
     parser.main()
@@ -230,7 +251,7 @@ def test_appended_log(psr):
     assert data['pages'] == 0
     assert data['items'] == 0
     for k in cst.LATEST_MATCHES_RESULT_DICT.keys():
-        if k in ['resuming_crawl', 'latest_stat']:
+        if k in ['telnet_console', 'resuming_crawl', 'latest_stat']:
             assert data['latest_matches'][k]
         else:
             assert not data['latest_matches'][k]

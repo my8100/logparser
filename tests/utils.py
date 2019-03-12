@@ -58,7 +58,7 @@ class Constant(object):
         'tail',
         'first_log_time',
         'latest_log_time',
-        'elapsed',
+        'runtime',
         'first_log_timestamp',
         'latest_log_timestamp',
         'datas',
@@ -70,8 +70,10 @@ class Constant(object):
         'log_categories',
         'shutdown_reason',
         'finish_reason',
+        'crawler_stats',
         'last_update_time',
-        'last_update_timestamp'
+        'last_update_timestamp',
+        'logparser_version'
     ]
 
     META_KEYS = [
@@ -85,21 +87,22 @@ class Constant(object):
     ]
 
     FULL_EXTENDED_KEYS = [
-        'logparser_version',
+        'crawler_engine',
     ]
 
     SIMPLIFIED_KEYS = [
-        'first_log_time',
-        'latest_log_time',
-        'elapsed',
         'pages',
         'items',
+        'first_log_time',
+        'latest_log_time',
+        'runtime',
         'shutdown_reason',
         'finish_reason',
         'last_update_time'
     ]
 
     LATEST_MATCHES_RESULT_DICT = dict(
+        telnet_console='Telnet console listening on',
         resuming_crawl='Resuming crawl',
         latest_offsite='Filtered offsite request to',
         latest_duplicate='Filtered duplicate request',
@@ -139,7 +142,7 @@ class Constant(object):
     def timestamp_to_string(timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-    def check_demo_data(self, data, without_stats_dumped=False):
+    def check_demo_data(self, data, without_stats_dumped=False, modified_logstats=False):
         # 2018-10-23 18:29:41 [scrapy.core.engine] INFO: Closing spider (finished)
         # 2018-10-23 18:29:41 [scrapy.extensions.feedexport] INFO: Stored jsonlines feed
         if without_stats_dumped:
@@ -153,16 +156,18 @@ class Constant(object):
                     and 'INFO: Spider closed (finished)' not in data['tail'])
             assert data['latest_log_time'] == '2018-10-23 18:29:41'
             # assert data['latest_log_timestamp'] == 1540290581
-            assert data['elapsed'] == '0:01:07'
+            assert data['runtime'] == '0:01:07'
             assert data['finish_reason'] == self.NA
+            assert data['crawler_stats'] == {}
         # 2018-10-23 18:29:42 [scrapy.core.engine] INFO: Spider closed (finished)
         else:
             assert 'Scrapy 1.5.0 started' in data['head'] and 'INFO: Spider closed (finished)' not in data['head']
             assert 'Scrapy 1.5.0 started' not in data['tail'] and 'INFO: Spider closed (finished)' in data['tail']
             assert data['latest_log_time'] == '2018-10-23 18:29:42'
             # assert data['latest_log_timestamp'] == 1540290582
-            assert data['elapsed'] == '0:01:08'
+            assert data['runtime'] == '0:01:08'
             assert data['finish_reason'] == 'finished'
+            assert data['crawler_stats']['source'] == 'log'
 
         assert data['first_log_time'] == '2018-10-23 18:28:34'
         # assert data['first_log_timestamp'] == 1540290514
@@ -176,9 +181,12 @@ class Constant(object):
         # "last_update_time": "2019-01-01 00:00:01", comes from last_update_timestamp
         assert self.string_to_timestamp(data['last_update_time']) == data['last_update_timestamp']
 
-        assert (len(data['datas']) == 67
-                and data['datas'][0] == ['2018-10-23 18:28:35', 0, 0, 0, 0]
-                and data['datas'][-1] == ['2018-10-23 18:29:41', 3, 0, 2, 0])
+        assert len(data['datas']) == 67
+        assert data['datas'][0] == ['2018-10-23 18:28:35', 0, 0, 0, 0]
+        if modified_logstats:  # To test update_data_with_crawler_stats()
+            assert data['datas'][-1] == ['2018-10-23 18:29:41', 1, 2, 3, 4]
+        else:
+            assert data['datas'][-1] == ['2018-10-23 18:29:41', 3, 0, 2, 0]
         assert data['pages'] == 3
         assert data['items'] == 2
         for k, v in self.LATEST_MATCHES_RESULT_DICT.items():
@@ -208,6 +216,8 @@ SETTINGS = dict(
     scrapyd_server=cst.SCRAPYD_SERVER,
     scrapyd_logs_dir=cst.LOGS_PATH,  # ''
     parse_round_interval=0,  # 60
+    enable_telnet=True,
+    override_telnet_console_host='',
     log_encoding=cst.LOG_ENCODING,
     log_extensions=cst.LOG_EXTENSIONS,
     log_head_lines=cst.LOG_HEAD_LINES,  # 100 => 50, 180 lines in total

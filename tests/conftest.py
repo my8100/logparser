@@ -1,4 +1,10 @@
 # coding: utf8
+"""
+Set 'jobs_to_keep = 100' in the config file of Scrapyd before running the test.
+https://scrapyd.readthedocs.io/en/latest/config.html#jobs-to-keep
+jobs_to_keep: The number of finished jobs to keep per spider. Defaults to 5. This refers to logs and items.
+finished_to_keep: The number of finished processes to keep in the launcher. Defaults to 100.
+"""
 import os
 from shutil import rmtree
 import zipfile

@@ -33,6 +33,17 @@ PARSE_ROUND_INTERVAL = 60
 
 
 ############################## Advanced Settings ##############################
+# Whether to collect crawler.stats and engine status via telnet, the default is True.
+# Check out https://doc.scrapy.org/en/latest/topics/telnetconsole.html for more info.
+# Note that this feature temporarily only works for Scrapy 1.5.1 and its earlier version,
+# since telnet console now requires username and password after Scrapy 1.5.2,
+# and this option would be set to False if unsupported version of Scrapy is found.
+ENABLE_TELNET = True
+
+# The default is '', set up this option only when you are using docker-compose.
+# e.g. '127.0.0.1'
+OVERRIDE_TELNET_CONSOLE_HOST = ''
+
 # The encoding of the Scrapy logs, the default is 'utf-8'.
 # https://doc.scrapy.org/en/latest/topics/settings.html#log-encoding
 LOG_ENCODING = 'utf-8'
@@ -54,7 +65,7 @@ DELETE_EXISTING_JSON_FILES_AT_STARTUP = False
 # Set it to False to reduce the RAM usage of LogParser.
 KEEP_DATA_IN_MEMORY = False
 
-# Set up this item to limit the size of the generated file 'stats.json' resides in SCRAPYD_LOGS_DIR,
+# Set up this option to limit the size of the generated file 'stats.json' resides in SCRAPYD_LOGS_DIR,
 # by removing data of the deleted Scrapy logs, the default is 100.
 JOBS_TO_KEEP = 100
 

@@ -1,6 +1,9 @@
 # coding: utf8
 import json
+import logging
 import platform
+# from six.moves.urllib.parse import urlencode
+# from six.moves.urllib.request import urlopen
 import sys
 try:
     from urllib import urlencode
@@ -10,15 +13,17 @@ except ImportError:
     from urllib.request import urlopen
 
 from .__version__ import __version__
-from .settings import (SCRAPYD_SERVER, SCRAPYD_LOGS_DIR, PARSE_ROUND_INTERVAL, LOG_ENCODING, LOG_EXTENSIONS,
-                       LOG_HEAD_LINES, LOG_TAIL_LINES, DELETE_EXISTING_JSON_FILES_AT_STARTUP,
-                       KEEP_DATA_IN_MEMORY, JOBS_TO_KEEP, CHUNK_SIZE, VERBOSE)
+from .settings import (SCRAPYD_SERVER, SCRAPYD_LOGS_DIR, PARSE_ROUND_INTERVAL, ENABLE_TELNET,
+                       OVERRIDE_TELNET_CONSOLE_HOST, LOG_ENCODING, LOG_EXTENSIONS, LOG_HEAD_LINES, LOG_TAIL_LINES,
+                       DELETE_EXISTING_JSON_FILES_AT_STARTUP, KEEP_DATA_IN_MEMORY, JOBS_TO_KEEP, CHUNK_SIZE, VERBOSE)
 
 
 custom_settings = dict(
     scrapyd_server=SCRAPYD_SERVER,
     scrapyd_logs_dir=SCRAPYD_LOGS_DIR,
     parse_round_interval=PARSE_ROUND_INTERVAL,
+    enable_telnet=ENABLE_TELNET,
+    override_telnet_console_host=OVERRIDE_TELNET_CONSOLE_HOST,
     log_encoding=LOG_ENCODING,
     log_extensions=LOG_EXTENSIONS,
     log_head_lines=LOG_HEAD_LINES,
@@ -34,12 +39,18 @@ custom_settings = dict(
 )
 
 
-def printf(value, warn=False):
-    prefix = "!!!" if warn else ">>>"
-    print("%s %s" % (prefix, value))
+def get_logger(name, level=logging.DEBUG):
+    logger = logging.getLogger(name)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(fmt="[%(asctime)s] %(levelname)-8s in %(name)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(level)
+    return logger
 
 
 def check_update():
+    logger = get_logger(__name__)
     js = {}
     try:
         data = dict(custom_settings)
@@ -54,15 +65,15 @@ def check_update():
         text = req.read().decode('utf-8', 'replace')
         js = json.loads(text)
     # except Exception as err:
-        # print(err)
+    #     print(err)
     except:
         pass
     else:
         if js.get('latest_version') == __version__:
-            printf('Running the latest version: %s' % __version__)
+            logger.info("Running the latest version: %s", __version__)
         else:
             if js.get('info', ''):
-                printf(js['info'], warn=True)
+                logger.warning(js['info'])
             if js.get('force_update', ''):
-                sys.exit('Please update and then restart logparser.')
+                sys.exit("Please update and then restart logparser. ")
     return js  # For test

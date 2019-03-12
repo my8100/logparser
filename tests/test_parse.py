@@ -16,11 +16,12 @@ def test_invalid_log():
             assert '404 - No Such Resource' in data['head'] and '404 - No Such Resource' in data['tail']
 
         assert set(data.keys()) == set(cst.PARSE_KEYS)
-        for k in ['first_log_time', 'latest_log_time', 'elapsed', 'shutdown_reason', 'finish_reason']:
+        for k in ['first_log_time', 'latest_log_time', 'runtime', 'shutdown_reason', 'finish_reason']:
             assert data[k] == cst.NA
-        for k in ['first_log_timestamp', 'latest_log_timestamp', 'latest_crawl_timestamp', 'latest_scrape_timestamp',
-                  'pages', 'items']:
+        for k in ['first_log_timestamp', 'latest_log_timestamp', 'latest_crawl_timestamp', 'latest_scrape_timestamp']:
             assert data[k] == 0
+        for k in ['pages', 'items']:
+            assert data[k] is None
         # assert data['last_update_timestamp'] > 0  # 1546272001
         # assert len(data['last_update_time']) == 19  # "2019-01-01 00:00:01"
         assert cst.string_to_timestamp(data['last_update_time']) == data['last_update_timestamp']
@@ -36,20 +37,31 @@ def test_invalid_log():
 
 
 def test_demo_log():
-    for case, text in zip(['without_stats_dumped', 'whole_log'], [FRONT, FRONT + END]):
+    modified_logstats = FRONT.replace("Crawled 3 pages (at 0 pages/min), scraped 2 items (at 0 items/min)",
+                                      "Crawled 1 pages (at 2 pages/min), scraped 3 items (at 4 items/min)")
+    for case, text in zip(['without_stats_dumped', 'whole_log', 'modified_logstats'],
+                          [FRONT, FRONT + END, modified_logstats + END]):
         data = parse(text, headlines=50, taillines=100)  # 180 lines in total
         # cst.json_dumps(data)
 
         if case == 'without_stats_dumped':
             cst.check_demo_data(data, without_stats_dumped=True)
+        elif case == 'modified_logstats':  # to test update_data_with_crawler_stats()
+            cst.check_demo_data(data, without_stats_dumped=False, modified_logstats=True)
         else:
             cst.check_demo_data(data, without_stats_dumped=False)
+
+
+def test_latest_item_unicode_escape():
+    text = (FRONT + END).replace("{'item': 2}", u"{u'Chinese \\u6c49\\u5b57': 2}")
+    data = parse(text)
+    assert data['latest_matches']['latest_item'] == u"{u'Chinese 汉字': 2}"
 
 
 def test_only_stats_dumped():
     replaces = [
         ("'downloader/response_status_count/302': 1,",
-         "'downloader/response_status_count/302': 7,\n'downloader/response_status_count/301': 8,"),
+         "'downloader/response_status_count/302': 7,\n 'downloader/response_status_count/301': 8,"),
         ("'response_received_count': 3,", "'response_received_count': 30,"),
         ("'item_scraped_count': 2,", "'item_scraped_count': 20,"),
         ("'log_count/ERROR': 5,", "'log_count/ERROR': 4,"),
@@ -70,7 +82,7 @@ def test_only_stats_dumped():
     # cst.json_dumps(data)
     assert data['first_log_time'] == '2018-10-23 18:29:41'
     assert data['latest_log_time'] == '2018-10-23 18:29:42'
-    assert data['elapsed'] == '0:00:01'
+    assert data['runtime'] == '0:00:01'
     assert data['datas'] == []
     assert data['pages'] == 30
     assert data['items'] == 20

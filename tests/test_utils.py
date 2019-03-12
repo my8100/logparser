@@ -1,12 +1,12 @@
 # coding: utf8
 import os
 
-from logparser.run import SETTINGS_PY_PATH
+from logparser.run import STAR
 from logparser.utils import check_update
 
 
-def test_settings_py():
-    assert os.path.exists(SETTINGS_PY_PATH)  # Test importing of logparser/logparser/run.py
+def test_run_py():
+    assert STAR  # Test importing of logparser/logparser/run.py
 
 
 def test_check_update():

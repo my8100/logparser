@@ -170,4 +170,4 @@ Out[8]: 'finished'
 ### To work with *ScrapydWeb* for visualization
 Check out https://github.com/my8100/scrapydweb for more info.
 
-![visualization](https://raw.githubusercontent.com/my8100/files/master/scrapydweb/screenshots/log_charts.png)
+![stats](https://raw.githubusercontent.com/my8100/files/master/scrapydweb/screenshots/stats.gif)

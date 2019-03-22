@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 from logparser import parse
 
 from tests.demo_log import ERROR_404, SHUTDOWN, FRONT, END

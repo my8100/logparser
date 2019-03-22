@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 
 ERROR_404 = u"""
 <html>

@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 """
 Set 'jobs_to_keep = 100' in the config file of Scrapyd before running the test.
 https://scrapyd.readthedocs.io/en/latest/config.html#jobs-to-keep

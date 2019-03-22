@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 
 __title__ = 'logparser'
 __version__ = '0.8.1'

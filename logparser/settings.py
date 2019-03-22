@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 """
 A tool for parsing Scrapy logfiles periodically and incrementally, designed for ScrapydWeb.
 

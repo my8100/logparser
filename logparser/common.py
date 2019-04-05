@@ -123,6 +123,9 @@ class Common(object):
         text = re.sub(r'(".*?)\'(.*?)\'(.*?")', r'\1_\2_\3', text)
         text = re.sub(r"'(.+?)'", r'"\1"', text)
         text = re.sub(r'(datetime.datetime\(.+?\))', r'"\1"', text)
+        text = re.sub(r'u"(.+?)"', r'"\1"', text)
+        text = re.sub(r"u'(.+?)'", r"'\1'", text)
+
         try:
             return json.loads(text)
         except ValueError as err:

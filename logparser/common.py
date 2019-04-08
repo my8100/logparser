@@ -119,10 +119,15 @@ class Common(object):
     def parse_crawler_stats(text):
         # 'start_time': datetime.datetime(2019, 3, 9, 13, 55, 24, 601697)
         # "robotstxt/exception_count/<class 'twisted.internet.error.TCPTimedOutError'>": 1,
+        # scrapy-crawlera/scrapy_crawlera/middleware.py:
+            # self.crawler.stats.inc_value(
+                # 'crawlera/response/error/%s' % crawlera_error.decode('utf8'))
+        # u"crawlera/response/error/timeout": 1
         backup = text
+        text = re.sub(r'(datetime.datetime\(.+?\))', r'"\1"', text)
         text = re.sub(r'(".*?)\'(.*?)\'(.*?")', r'\1_\2_\3', text)
         text = re.sub(r"'(.+?)'", r'"\1"', text)
-        text = re.sub(r'(datetime.datetime\(.+?\))', r'"\1"', text)
+        text = re.sub(r'[bu]"(.+?)"', r'"\1"', text)
         try:
             return json.loads(text)
         except ValueError as err:

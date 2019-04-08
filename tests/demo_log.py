@@ -171,8 +171,8 @@ twisted.internet.error.TCPTimedOutError: TCP connection timed out: 10060: 由于
 END = u"""2018-10-23 18:29:41 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
 {'downloader/exception_count': 3,
  'downloader/exception_type_count/twisted.internet.error.TCPTimedOutError': 3,
- 'downloader/request_bytes': 1336,
- 'downloader/request_count': 7,
+ b'downloader/request_bytes': 13,
+ u'downloader/request_count': 7,
  'downloader/request_method_count/GET': 7,
  'downloader/response_bytes': 1669,
  'downloader/response_count': 4,

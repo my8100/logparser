@@ -278,7 +278,7 @@ class LogParser(Common):
         data.setdefault('crawler_engine', {})
         if (self.ENABLE_TELNET
            and data['latest_matches']['telnet_console']
-           and not data['crawler_stats']):  # Do not telnet when the job is finished
+           and data['crawler_stats'].get('source') != 'log'):  # Do not telnet when the job is finished
             try:
                 self.telnet(data)
             except:

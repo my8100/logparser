@@ -1,7 +1,8 @@
 # coding: utf-8
 from logparser import parse
 
-from tests.demo_log import ERROR_404, SHUTDOWN, FRONT, END
+from tests.demo_log import (ERROR_404, SHUTDOWN, FRONT, END, TELNET_160_DEFAULT, TELNET_160_USERNAME,
+                            TELNET_160_PASSWORD, TELNET_160_USERNAME_PASSWORD)
 from tests.utils import cst
 
 
@@ -103,3 +104,26 @@ def test_shutdown_reason():
     data = parse(SHUTDOWN.replace('twice', ''))
     assert data['shutdown_reason'] == 'Received SIGTERM'
     assert data['finish_reason'] == 'shutdown'
+
+def test_telnet_info():
+    data = parse(TELNET_160_DEFAULT)
+    d = data['latest_matches']
+    assert d['scrapy_version'] == '1.6.0'
+    assert d['telnet_console'] == '127.0.0.1:6024'
+    assert d['telnet_username'] == ''
+    assert d['telnet_password'] == '9d3a29f17ee1bf9a'
+
+    data = parse(TELNET_160_USERNAME)
+    d = data['latest_matches']
+    assert d['telnet_username'] == 'usr123'
+    assert d['telnet_password'] == 'd24ad6be287d69b3'
+
+    data = parse(TELNET_160_PASSWORD)
+    d = data['latest_matches']
+    assert d['telnet_username'] == ''
+    assert d['telnet_password'] == '456psw'
+
+    data = parse(TELNET_160_USERNAME_PASSWORD)
+    d = data['latest_matches']
+    assert d['telnet_username'] == 'usr123'
+    assert d['telnet_password'] == '456psw'

@@ -21,7 +21,45 @@ SHUTDOWN = u"""2019-01-01 00:00:01 [scrapy.crawler] INFO: Received SIGTERM, shut
 }
 2019-01-01 00:00:01 [scrapy.core.engine] INFO: Spider closed (finished)"""
 
-FRONT = u"""2018-10-23 18:28:34 [scrapy.utils.log] INFO: Scrapy 1.5.0 started (bot: demo)
+TELNET_160_DEFAULT = u"""2019-06-11 15:53:48 [scrapy.utils.log] INFO: Scrapy 1.6.0 started (bot: ScrapydWeb_demo)
+2019-06-11 15:53:48 [scrapy.crawler] INFO: Overridden settings: {'BOT_NAME': 'ScrapydWeb_demo', 'FEED_EXPORT_ENCODING': 'utf-8', 'FEED_URI': 'file:///C:/Users/win7/items/ScrapydWeb_demo/test/2019-06-11T15_53_43.jl', 'LOG_FILE': 'logs\\ScrapydWeb_demo\\test\\2019-06-11T15_53_43.log', 'NEWSPIDER_MODULE': 'ScrapydWeb_demo.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['ScrapydWeb_demo.spiders']}
+2019-06-11 15:53:48 [scrapy.extensions.telnet] INFO: Telnet Password: 9d3a29f17ee1bf9a
+2019-06-11 15:53:49 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6024
+"""
+
+TELNET_160_USERNAME = u"""2019-06-11 16:05:38 [scrapy.utils.log] INFO: Scrapy 1.6.0 started (bot: ScrapydWeb_demo)
+2019-06-11 16:05:38 [scrapy.crawler] INFO: Overridden settings: {'BOT_NAME': 'ScrapydWeb_demo', 'FEED_EXPORT_ENCODING': 'utf-8', 'FEED_URI': 'file:///C:/Users/win7/items/ScrapydWeb_demo/test/2019-06-11T16_05_09.jl', 'LOG_FILE': 'logs\\ScrapydWeb_demo\\test\\2019-06-11T16_05_09.log', 'NEWSPIDER_MODULE': 'ScrapydWeb_demo.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['ScrapydWeb_demo.spiders'], 'TELNETCONSOLE_USERNAME': 'usr123'}
+2019-06-11 16:05:38 [scrapy.extensions.telnet] INFO: Telnet Password: d24ad6be287d69b3
+2019-06-11 16:05:38 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6024
+"""
+
+TELNET_160_PASSWORD = u"""2019-06-11 16:08:44 [scrapy.utils.log] INFO: Scrapy 1.6.0 started (bot: ScrapydWeb_demo)
+2019-06-11 16:08:44 [scrapy.crawler] INFO: Overridden settings: {'BOT_NAME': 'ScrapydWeb_demo', 'FEED_EXPORT_ENCODING': 'utf-8', 'FEED_URI': 'file:///C:/Users/win7/items/ScrapydWeb_demo/test/2019-06-11T16_07_57.jl', 'LOG_FILE': 'logs\\ScrapydWeb_demo\\test\\2019-06-11T16_07_57.log', 'NEWSPIDER_MODULE': 'ScrapydWeb_demo.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['ScrapydWeb_demo.spiders'], 'TELNETCONSOLE_PASSWORD': '456psw'}
+2019-06-11 16:08:44 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6024
+"""
+
+TELNET_160_USERNAME_PASSWORD = u"""2019-06-11 16:15:13 [scrapy.utils.log] INFO: Scrapy 1.6.0 started (bot: ScrapydWeb_demo)
+2019-06-11 16:15:13 [scrapy.crawler] INFO: Overridden settings: {'BOT_NAME': 'ScrapydWeb_demo', 'FEED_EXPORT_ENCODING': 'utf-8', 'FEED_URI': 'file:///C:/Users/win7/items/ScrapydWeb_demo/test/2019-06-11T16_14_36.jl', 'LOG_FILE': 'logs\\ScrapydWeb_demo\\test\\2019-06-11T16_14_36.log', 'NEWSPIDER_MODULE': 'ScrapydWeb_demo.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['ScrapydWeb_demo.spiders'], 'TELNETCONSOLE_PASSWORD': '456psw', 'TELNETCONSOLE_USERNAME': 'usr123'}
+2019-06-11 16:15:14 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6024
+"""
+
+TELNET_151_NO_PORT = u"""2019-06-15 11:53:00 [scrapy.utils.log] INFO: Scrapy 1.5.1 started (bot: demo_project)
+2019-06-15 11:53:01 [scrapy.extensions.telnet] DEBUG: Telnet console listening on localhost
+2019-06-15 11:53:02 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+"""
+
+TELNET_151_PORT_16023 = u"""2019-06-15 11:53:00 [scrapy.utils.log] INFO: Scrapy 1.5.1 started (bot: demo_project)
+2019-06-15 11:53:01 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:16023
+2019-06-15 11:53:02 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+"""
+
+TELNET_160_PORT_16024 = u"""2019-06-15 11:53:00 [scrapy.utils.log] INFO: Scrapy 1.6.0 started (bot: demo_project)
+2019-06-15 11:53:01 [scrapy.extensions.telnet] INFO: Telnet Password: 9d3a29f17ee1bf9a
+2019-06-15 11:53:01 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:16024
+2019-06-15 11:53:02 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+"""
+
+FRONT = u"""2018-10-23 18:28:34 [scrapy.utils.log] INFO: Scrapy 1.5.1 started (bot: demo)
 2018-10-23 18:28:34 [scrapy.utils.log] INFO: Versions: lxml 4.2.1.0, libxml2 2.9.7, cssselect 1.0.3, parsel 1.4.0, w3lib 1.19.0, Twisted 17.5.0, Python 3.6.5 |Anaconda, Inc.| (default, Mar 29 2018, 13:32:41) [MSC v.1900 64 bit (AMD64)], pyOpenSSL 17.5.0 (OpenSSL 1.0.2o  27 Mar 2018), cryptography 2.2.1, Platform Windows-7-6.1.7601-SP1
 2018-10-23 18:28:34 [scrapy.crawler] INFO: Overridden settings: {'BOT_NAME': 'demo', 'CONCURRENT_REQUESTS': 2, 'COOKIES_ENABLED': False, 'DOWNLOAD_DELAY': 1, 'FEED_URI': 'file:///C:/Users/win7/items/demo/test/2018-10-23_182826.jl', 'LOGSTATS_INTERVAL': 1, 'LOG_FILE': 'logs/demo/test/2018-10-23_182826.log', 'NEWSPIDER_MODULE': 'demo.spiders', 'SPIDER_MODULES': ['demo.spiders'], 'USER_AGENT': 'Mozilla/5.0'}
 2018-10-23 18:28:34 [scrapy.middleware] INFO: Enabled extensions:

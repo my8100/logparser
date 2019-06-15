@@ -3,6 +3,9 @@ from datetime import datetime
 import io
 import json
 import os
+import platform
+from subprocess import Popen
+import sys
 import time
 
 from logparser import __version__
@@ -15,6 +18,9 @@ else:
 
 
 class Constant(object):
+    ON_WINDOWS = platform.system() == 'Windows'
+    PY2 = sys.version_info.major < 3
+
     NA = 'N/A'
     LOGPARSER_VERSION = __version__
     SIZE = SIZE
@@ -42,6 +48,9 @@ class Constant(object):
     LOG_PATH = os.path.join(LOGS_PATH, PROJECT, SPIDER, '%s.log' % JOB)
     LOG_TEMP_PATH = os.path.join(LOGS_PATH, PROJECT, SPIDER, '%s_temp.log' % JOB)
     TXT_PATH = os.path.join(LOGS_PATH, PROJECT_TXT, SPIDER_TXT, '%s.txt' % JOB_TXT)
+
+    DEMO_PROJECT_PATH = os.path.join(CWD, 'demo_project')
+    DEMO_PROJECT_LOG_FOLDER_PATH = os.path.join(LOGS_PATH, 'demo_project', 'example')
 
     LOG_JSON_PATH = os.path.join(LOGS_PATH, PROJECT, SPIDER, '%s.json' % JOB)
     LOG_JSON_TEMP_PATH = os.path.join(LOGS_PATH, PROJECT, SPIDER, '%s_temp.json' % JOB)
@@ -102,7 +111,10 @@ class Constant(object):
     ]
 
     LATEST_MATCHES_RESULT_DICT = dict(
-        telnet_console='Telnet console listening on',
+        scrapy_version='1.5.1',
+        telnet_console='127.0.0.1:6023',
+        telnet_username='',
+        telnet_password='',
         resuming_crawl='Resuming crawl',
         latest_offsite='Filtered offsite request to',
         latest_duplicate='Filtered duplicate request',
@@ -142,15 +154,25 @@ class Constant(object):
     def timestamp_to_string(timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
+    def sub_process(self, args, block=False, timeout=60):
+        proc = Popen(args.split())
+        if block:
+            # TODO: In PY2: TypeError: communicate() got an unexpected keyword argument 'timeout'
+            if self.PY2:
+                proc.communicate()
+            else:
+                proc.communicate(timeout=timeout)
+        return proc
+
     def check_demo_data(self, data, without_stats_dumped=False, modified_logstats=False):
         # 2018-10-23 18:29:41 [scrapy.core.engine] INFO: Closing spider (finished)
         # 2018-10-23 18:29:41 [scrapy.extensions.feedexport] INFO: Stored jsonlines feed
         if without_stats_dumped:
-            assert ('Scrapy 1.5.0 started' in data['head']
+            assert ('Scrapy 1.5.1 started' in data['head']
                     and 'INFO: Closing spider (finished)' not in data['head']
                     and 'INFO: Stored jsonlines feed' not in data['head']
                     and 'INFO: Spider closed (finished)' not in data['head'])
-            assert ('Scrapy 1.5.0 started' not in data['tail']
+            assert ('Scrapy 1.5.1 started' not in data['tail']
                     and 'INFO: Closing spider (finished)' in data['tail']
                     and 'INFO: Stored jsonlines feed' in data['tail']
                     and 'INFO: Spider closed (finished)' not in data['tail'])
@@ -161,8 +183,8 @@ class Constant(object):
             assert data['crawler_stats'] == {}
         # 2018-10-23 18:29:42 [scrapy.core.engine] INFO: Spider closed (finished)
         else:
-            assert 'Scrapy 1.5.0 started' in data['head'] and 'INFO: Spider closed (finished)' not in data['head']
-            assert 'Scrapy 1.5.0 started' not in data['tail'] and 'INFO: Spider closed (finished)' in data['tail']
+            assert 'Scrapy 1.5.1 started' in data['head'] and 'INFO: Spider closed (finished)' not in data['head']
+            assert 'Scrapy 1.5.1 started' not in data['tail'] and 'INFO: Spider closed (finished)' in data['tail']
             assert data['latest_log_time'] == '2018-10-23 18:29:42'
             # assert data['latest_log_timestamp'] == 1540290582
             assert data['runtime'] == '0:01:08'
@@ -190,7 +212,10 @@ class Constant(object):
         assert data['pages'] == 3
         assert data['items'] == 2
         for k, v in self.LATEST_MATCHES_RESULT_DICT.items():
-            assert v in data['latest_matches'][k]
+            if k in ['telnet_username', 'telnet_password']:
+                assert not v
+            else:
+                assert v in data['latest_matches'][k]
 
         # "latest_crawl_timestamp": 1540290519, comes from ['latest_matches']['latest_crawl'][:19]
         # "latest_scrape_timestamp": 1540290519, comes from ['latest_matches']['latest_scrape'][:19]
@@ -215,7 +240,7 @@ cst = Constant()
 SETTINGS = dict(
     scrapyd_server=cst.SCRAPYD_SERVER,
     scrapyd_logs_dir=cst.LOGS_PATH,  # ''
-    parse_round_interval=0,  # 60
+    parse_round_interval=0,  # 10
     enable_telnet=True,
     override_telnet_console_host='',
     log_encoding=cst.LOG_ENCODING,
@@ -226,7 +251,8 @@ SETTINGS = dict(
     keep_data_in_memory=False,
     jobs_to_keep=100,
     chunk_size=10 * 1000 * 1000,  # 10 MB
-    verbose=True,  # False
+    # verbose=True,
+    verbose=False,
     main_pid=0,
     debug=True,  # False
     exit_timeout=0.001  # 0

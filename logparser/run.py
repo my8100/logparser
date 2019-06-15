@@ -31,8 +31,8 @@ def main():
             err=err, path=SETTINGS_PY_PATH.replace('\\', '/')))
     print("{star}Visit stats at: http://{server}/logs/stats.json{star}".format(
         star=STAR, server=custom_settings['scrapyd_server']))
-    if not custom_settings.get('main_pid', 0):
-        check_update()
+    # if not custom_settings.get('main_pid', 0):
+    check_update()
     logparser = LogParser(**custom_settings)
     time.sleep(3)
     logparser.main()
@@ -58,7 +58,7 @@ def parse_args():
               "https://scrapyd.readthedocs.io/en/stable/config.html#logs-dir") % scrapyd_logs_dir
     )
 
-    parse_round_interval = custom_settings.get('parse_round_interval', 60)
+    parse_round_interval = custom_settings.get('parse_round_interval', 10)
     parser.add_argument(
         '-t', '--sleep',
         default=parse_round_interval,
@@ -70,7 +70,7 @@ def parse_args():
         '-dt', '--disable_telnet',
         action='store_true',
         help=("current: ENABLE_TELNET = %s, append '--disable_telnet' to disable collecting "
-              "crawler.stats and engine status via telnet") % enable_telnet
+              "Crawler.stats and Crawler.engine via telnet") % enable_telnet
     )
 
     delete_existing_json_files_at_startup = custom_settings.get('delete_existing_json_files_at_startup', True)
@@ -113,6 +113,7 @@ def update_config(args):
 
     parse_round_interval = args.sleep
     try:
+        # ValueError: invalid literal for int() with base 10: '0.1'
         assert int(parse_round_interval) >= 0
     except (TypeError, ValueError, AssertionError):  # [], ''
         assert False, "PARSE_ROUND_INTERVAL should be a non-negative integer: %s" % repr(parse_round_interval)

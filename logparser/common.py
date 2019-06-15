@@ -2,10 +2,16 @@
 from collections import OrderedDict
 import json
 from datetime import datetime
+import os
+import platform
+import sys
 import re
 import time
 import traceback
 
+
+CWD = os.path.dirname(os.path.abspath(__file__))
+SETTINGS_PY_PATH = os.path.join(CWD, 'settings.py')
 
 # LINESEP_PATTERN = re.compile(r'%s' % os.linesep)
 LINESEP_PATTERN = re.compile(r'\r\n|\n|\r')
@@ -36,12 +42,21 @@ for k, v in LOG_CATEGORIES_PATTERN_DICT.items():
                     (?=\r?\n{time_}[ ][^\n]+?(?:DEBUG|INFO|WARNING|ERROR|CRITICAL))  # ?=: Would not consume strings
                    """.format(time_=DATETIME_PATTERN, pattern=v), re.X | re.S)       # re.S: . matches new line
     LOG_CATEGORIES_PATTERN_DICT[k] = p
+_odict = OrderedDict()
+for k in ['critical_logs', 'error_logs', 'warning_logs', 'redirect_logs', 'retry_logs', 'ignore_logs']:
+    _odict.update({k: LOG_CATEGORIES_PATTERN_DICT[k]})
+LOG_CATEGORIES_PATTERN_DICT = _odict
 
 # 2019-01-01 00:00:01 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:6023
 # 2019-01-01 00:00:01 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
 # {'downloader/exception_count': 3,
 LATEST_MATCHES_PATTERN_DICT = dict(
+    scrapy_version=r'Scrapy[ ]\d+\.\d+\.\d+[ ]started',    # Scrapy 1.5.1 started (bot: demo)
     telnet_console=r'Telnet[ ]console[ ]listening[ ]on',   # Telnet console listening on 127.0.0.1:6023
+    # Default: 'scrapy' | Overridden settings: {'TELNETCONSOLE_USERNAME': 'usr'}
+    telnet_username=r'Overridden[ ]settings:.+TELNETCONSOLE_USERNAME',
+    # Telnet Password: 865bba341ef25552 | Overridden settings: {'TELNETCONSOLE_PASSWORD': 'psw'}
+    telnet_password=r'Overridden[ ]settings:.+TELNETCONSOLE_PASSWORD|Telnet[ ]Password:[ ].+',
     resuming_crawl=r'Resuming[ ]crawl',          # Resuming crawl (675840 requests scheduled)
     latest_offsite=r'Filtered[ ]offsite',        # Filtered offsite request to 'www.baidu.com'
     latest_duplicate=r'Filtered[ ]duplicate',    # Filtered duplicate request: <GET http://httpbin.org/headers>
@@ -50,6 +65,11 @@ LATEST_MATCHES_PATTERN_DICT = dict(
     latest_item=r'^\{.+\}',                      # {'item': 1}  TODO: multilines item
     latest_stat=r'Crawled[ ]\d+[ ]pages[ ]\(at'  # Crawled 3 pages (at 0 pages/min), scraped 2 items (at 0 items/min)
 )
+_odict = OrderedDict()
+for k in ['scrapy_version', 'telnet_console', 'telnet_username', 'telnet_password', 'resuming_crawl',
+          'latest_offsite', 'latest_duplicate', 'latest_crawl', 'latest_scrape', 'latest_item', 'latest_stat']:
+    _odict.update({k: LATEST_MATCHES_PATTERN_DICT[k]})
+LATEST_MATCHES_PATTERN_DICT = _odict
 for k, v in LATEST_MATCHES_PATTERN_DICT.items():
     if k != 'latest_item':
         LATEST_MATCHES_PATTERN_DICT[k] = r'^%s[ ].+?%s' % (DATETIME_PATTERN, v)
@@ -102,11 +122,22 @@ class Common(object):
     STATS_DUMPED_CATEGORIES_DICT = STATS_DUMPED_CATEGORIES_DICT
     PATTERN_LOG_ENDING = PATTERN_LOG_ENDING
 
+    CWD = CWD
+    ON_WINDOWS = platform.system() == 'Windows'
+    PY2 = sys.version_info.major < 3
+    SETTINGS_PY_PATH = SETTINGS_PY_PATH
+
     @staticmethod
     def get_current_time_timestamp():
         current_timestamp = int(time.time())
         current_time = datetime.fromtimestamp(current_timestamp).strftime('%Y-%m-%d %H:%M:%S')
         return current_time, current_timestamp
+
+    @staticmethod
+    def parse_log_path(log_path):
+        project, spider, _job = log_path.split(os.sep)[-3:]
+        job, ext = os.path.splitext(_job)  # ('job', '') or ('job', '.log')
+        return project, spider, job, ext
 
     def get_ordered_dict(self, adict, source):
         odict = OrderedDict(source=source)

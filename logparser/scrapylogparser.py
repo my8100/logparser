@@ -97,10 +97,26 @@ class ScrapyLogParser(Common):
             self.data['items'] = max(i[3] for i in self.data['datas'])
 
     def extract_latest_matches(self):
-        self.data['latest_matches'] = {}
+        self.data['latest_matches'] = OrderedDict()
         for k, v in self.LATEST_MATCHES_PATTERN_DICT.items():
-            step = 1 if k in ['telnet_console', 'resuming_crawl'] else -1
-            self.data['latest_matches'][k] = self.re_search_final_match(v, step=step)
+            step = 1 if k in ['scrapy_version', 'telnet_console', 'telnet_username', 'telnet_password', 'resuming_crawl'] else -1
+            result = self.re_search_final_match(v, step=step)
+            if result:
+                if k == 'scrapy_version':
+                    m = re.search(r'Scrapy[ ](\d+\.\d+\.\d+)[ ]started', result)
+                    result = m.group(1) if m else ''
+                elif k == 'telnet_console':
+                    m = re.search(r'listening[ ]on[ ](.+)$', result)
+                    result = m.group(1) if m else ''
+                elif k == 'telnet_username':
+                    m = re.search(r"""TELNETCONSOLE_USERNAME['"]:[ ](['"])(.+?)\1""", result)
+                    result = m.group(2) if m else ''
+                elif k == 'telnet_password':
+                    m = re.search(r'(Telnet[ ]Password:[ ])(.+)', result)
+                    m = m or re.search(r"""TELNETCONSOLE_PASSWORD['"]:[ ](['"])(.+?)\1""", result)
+                    result = m.group(2) if m else ''
+            self.data['latest_matches'][k] = result
+
         # Scrapyd in PY2: u"{u'Chinese \\u6c49\\u5b57 1':"
         latest_item = self.data['latest_matches']['latest_item']
         if '\\u' in latest_item:  # and sys.version_info.major < 3:
@@ -118,7 +134,7 @@ class ScrapyLogParser(Common):
                 self.data['%s_timestamp' % k] = 0
 
     def extract_log_categories(self):
-        self.data['log_categories'] = {}
+        self.data['log_categories'] = OrderedDict()
         for level, pattern in self.LOG_CATEGORIES_PATTERN_DICT.items():
             matches = re.findall(pattern, self.text)
             # DEBUG: Gave up retrying <GET

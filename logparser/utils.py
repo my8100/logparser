@@ -2,15 +2,14 @@
 import json
 import logging
 import platform
-# from six.moves.urllib.parse import urlencode
-# from six.moves.urllib.request import urlopen
 import sys
+
 try:
-    from urllib import urlencode
-    from urllib2 import urlopen
+    from scrapy import __version__ as scrapy_version
 except ImportError:
-    from urllib.parse import urlencode
-    from urllib.request import urlopen
+    scrapy_version = '0.0.0'
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.request import urlopen
 
 from .__version__ import __version__
 from .settings import (SCRAPYD_SERVER, SCRAPYD_LOGS_DIR, PARSE_ROUND_INTERVAL, ENABLE_TELNET,
@@ -49,7 +48,7 @@ def get_logger(name, level=logging.DEBUG):
     return logger
 
 
-def check_update():
+def check_update(timeout=5):
     logger = get_logger(__name__)
     js = {}
     try:
@@ -57,15 +56,17 @@ def check_update():
         data['os'] = platform.platform()
         data['py'] = '.'.join([str(n) for n in sys.version_info[:3]])
         data['logparser'] = __version__
+        data['scrapy_version'] = scrapy_version
         if sys.version_info.major >= 3:
             data = urlencode(data).encode('utf-8', 'replace')
         else:
             data = urlencode(data)
-        req = urlopen('https://kaisla.top/update.php', data=data, timeout=3)
+        req = urlopen('https://my8100.herokuapp.com/check_update', data=data, timeout=timeout)
         text = req.read().decode('utf-8', 'replace')
         js = json.loads(text)
+        # print(js)
     # except Exception as err:
-    #     print(err)
+        # print(err)
     except:
         pass
     else:
@@ -76,4 +77,4 @@ def check_update():
                 logger.warning(js['info'])
             if js.get('force_update', ''):
                 sys.exit("Please update and then restart logparser. ")
-    return js  # For test
+    return js  # For test only

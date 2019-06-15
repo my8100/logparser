@@ -10,7 +10,7 @@ def test_run_py():
 
 
 def test_check_update():
-    js = check_update()
+    js = check_update(timeout=60)
     assert 'latest_version' in js and 'info' in js
 
 

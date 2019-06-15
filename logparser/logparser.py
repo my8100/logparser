@@ -6,10 +6,8 @@ import io
 import json
 import logging
 import os
-import platform
 import re
 import sys
-from telnetlib import DO, DONT, IAC, SB, SE, Telnet, TTYPE, WILL, WONT
 import time
 import traceback
 
@@ -17,22 +15,16 @@ try:
     from psutil import pid_exists
 except ImportError:
     pid_exists = None
-try:
-    from scrapy import __version__ as scrapy_version
-except ImportError:
-    scrapy_version = '1.0.0'
 
-from . import SETTINGS_PY_PATH
 from .__version__ import __version__
 from .common import Common
 from .scrapylogparser import parse
+from .telnet import MyTelnet
 from .utils import custom_settings, get_logger
 
 
 logger = get_logger(__name__)
 
-SUPPORTED_SCRAPY_VERSION = '1.5.1'
-IN_WINDOWS = True if platform.system() == 'Windows' else False
 SIMPLIFIED_KEYS = [
     'log_path',
     'json_path',
@@ -65,13 +57,7 @@ class LogParser(Common):
         self.SCRAPYD_SERVER = scrapyd_server
         self.SCRAPYD_LOGS_DIR = scrapyd_logs_dir
         self.PARSE_ROUND_INTERVAL = parse_round_interval
-        if enable_telnet and scrapy_version > SUPPORTED_SCRAPY_VERSION:
-            self.ENABLE_TELNET = False
-            self.logger.warning("ENABLE_TELNET is set to False for unsupported version of Scrapy: %s > %s",
-                                scrapy_version, SUPPORTED_SCRAPY_VERSION)
-        else:
-            self.ENABLE_TELNET = enable_telnet
-        self.tn = None
+        self.ENABLE_TELNET = enable_telnet
 
         self.OVERRIDE_TELNET_CONSOLE_HOST = override_telnet_console_host
         self.LOG_ENCODING = log_encoding
@@ -122,7 +108,7 @@ class LogParser(Common):
     # REF: /scrapydweb/scrapydweb/utils/poll.py
     def check_exit(self):
         exit_condition_1 = pid_exists is not None and not pid_exists(self.main_pid)
-        exit_condition_2 = not IN_WINDOWS and not self.check_pid(self.main_pid)
+        exit_condition_2 = not self.ON_WINDOWS and not self.check_pid(self.main_pid)
         if exit_condition_1 or exit_condition_2:
             sys.exit("!!! LogParser subprocess (pid: %s) exits "
                      "since main_pid %s not exists" % (self.logparser_pid, self.main_pid))
@@ -200,7 +186,8 @@ class LogParser(Common):
     def get_default_stats(self):
         last_update_timestamp = int(time.time())
         last_update_time = datetime.fromtimestamp(last_update_timestamp).strftime('%Y-%m-%d %H:%M:%S')
-        return dict(status='ok', datas={}, settings_py=self.handle_slash(SETTINGS_PY_PATH), settings=custom_settings,
+        return dict(status='ok', datas={},
+                    settings_py=self.handle_slash(self.SETTINGS_PY_PATH), settings=custom_settings,
                     last_update_timestamp=last_update_timestamp, last_update_time=last_update_time,
                     logparser_version=self.logparser_version)
 
@@ -218,7 +205,7 @@ class LogParser(Common):
             self.logger.warning("New logfile found: %s (%s bytes)", log_path, size)
             json_path = os.path.join(self.SCRAPYD_LOGS_DIR, project, spider, '%s.json' % job)
             json_url = 'http://%s/logs/%s/%s/%s.json' % (self.SCRAPYD_SERVER, project, spider, job)
-            # NOTE: do not use handle_slash() on log_path, since parse_log_path() use os.sep
+            # NOTE: do not use handle_slash() on log_path since parse_log_path() use os.sep
             data = OrderedDict(log_path=log_path, json_path=json_path, json_url=json_url,
                                size=size, position=0, status='ok', _head='')
             self.datas[log_path] = data
@@ -279,16 +266,16 @@ class LogParser(Common):
         if (self.ENABLE_TELNET
            and data['latest_matches']['telnet_console']
            and data['crawler_stats'].get('source') != 'log'):  # Do not telnet when the job is finished
-            try:
-                self.telnet(data)
-            except:
-                self.logger.error(traceback.format_exc())
-            finally:
-                if self.tn is not None:
-                    try:
-                        self.tn.close()
-                    except:
-                        pass
+            mytelnet = MyTelnet(data, self.OVERRIDE_TELNET_CONSOLE_HOST, self.verbose)
+            crawler_stats, crawler_engine = mytelnet.main()
+            if crawler_stats:
+                # update_log_count=False to avoid wrong count in parse_appended_log() when the job is running
+                self.update_data_with_crawler_stats(data, crawler_stats, update_log_count=False)
+
+            data['crawler_stats'] = crawler_stats or data['crawler_stats']
+            data['crawler_engine'] = crawler_engine or data['crawler_engine']
+            self.logger.debug("crawler_stats:\n%s", self.json_dumps(data['crawler_stats']))
+            self.logger.debug("crawler_engine:\n%s", self.json_dumps(data['crawler_engine']))
 
     @staticmethod
     def json_dumps(obj, sort_keys=False):
@@ -302,7 +289,7 @@ class LogParser(Common):
             try:
                 self.run()
                 end_time = time.time()
-                self.logger.debug("Took %.1f seconds this round", (end_time - start_time))
+                self.logger.debug("Took %.1f seconds in this round", (end_time - start_time))
                 if 0 < self.EXIT_TIMEOUT < end_time - self.init_time:
                     self.logger.critical("GoodBye, EXIT_TIMEOUT: %s", self.EXIT_TIMEOUT)
                     break
@@ -398,12 +385,6 @@ class LogParser(Common):
 
         self.logger.info("crawled_pages %s, scraped_items %s", data['pages'], data['items'])
 
-    @staticmethod
-    def parse_log_path(log_path):
-        project, spider, _job = log_path.split(os.sep)[-3:]
-        job, ext = os.path.splitext(_job)  # ('job', '') or ('job', '.log')
-        return project, spider, job, ext
-
     def read_appended_log(self, data, size=-1, backoff_times=10):
         # If the argument size is omitted, None, or negative, reads and returns all data until EOF.
         # https://stackoverflow.com/a/21533561/10517783
@@ -452,7 +433,7 @@ class LogParser(Common):
         else:
             try:
                 with io.open(json_path, 'r', encoding='utf-8') as f:
-                    data = json.loads(f.read())
+                    data = json.loads(f.read(), object_pairs_hook=OrderedDict)
             except Exception as err:
                 self.logger.error(err)
             else:
@@ -467,7 +448,11 @@ class LogParser(Common):
         self.log_paths = []
         for ext in self.LOG_EXTENSIONS:
             self.log_paths.extend(glob.glob(os.path.join(self.SCRAPYD_LOGS_DIR, '*/*/*%s' % ext)))
-        self.logger.info("Found %s logfiles", len(self.log_paths))
+        if not self.log_paths:
+            self.logger.error("No logfiles found in %s/*/*/, check and update "
+                              "the `SCRAPYD_LOGS_DIR` option in %s", self.SCRAPYD_LOGS_DIR, self.SETTINGS_PY_PATH)
+        else:
+            self.logger.info("Found %s logfiles", len(self.log_paths))
 
         self.existing_file_keys = set()
         for log_path in self.log_paths:
@@ -554,102 +539,3 @@ class LogParser(Common):
             self.logger.info("Now all_keys in memory: %s", len(self.datas))
         else:
             self.logger.info("all_keys in memory: %s", len(self.datas))
-
-    # Note that the telnet feature is tested in test_telnet_in_stats() by ScrapydWeb
-    # https://stackoverflow.com/questions/18547412/python-telnetlib-to-connect-to-scrapy-telnet-to-read-stats
-    def telnet(self, data):
-        # Telnet console listening on 127.0.0.1:6023
-        m = re.search(r'listening[ ]on[ ](.+):(\d+)$', data['latest_matches']['telnet_console'])
-        if not m:
-            self.logger.warning("Fail to extract host and port from %s", data['latest_matches']['telnet_console'])
-            return
-        host, port = m.groups()
-        host = self.OVERRIDE_TELNET_CONSOLE_HOST or host
-        self.logger.debug("Try to telnet to %s:%s for %s", host, port, data['log_path'])
-        try:
-            self.tn = Telnet(host, int(port), timeout=10)
-        # except ConnectionRefusedError as err:  # Python 2: <class 'socket.error'>
-        except Exception as err:
-            self.logger.error("Fail to telnet to %s:%s for %s: %s", host, port, data['log_path'], err)
-            return
-
-        if self.verbose:
-            self.tn.set_debuglevel(logging.DEBUG)
-        # [twisted] CRITICAL: Unhandled Error
-        # Failure: twisted.conch.telnet.OptionRefused: twisted.conch.telnet.OptionRefused
-        # https://github.com/jookies/jasmin-web/issues/2
-        self.tn.set_option_negotiation_callback(self.telnet_callback)
-
-        # spider._job, spider._version, settings.attributes["BOT_NAME"].value, JOB, SPIDER, PROJECT
-        # '\'logs\\\\demo_persistent\\\\test\\\\2019-01-23T18_25_34.log\'\r\r\r\n>>>'
-        _log_file = self.telnet_io(b'settings.attributes["LOG_FILE"].value', return_text=True)
-        self.logger.debug("settings['LOG_FILE'] found via telnet: %s", _log_file)
-        # Username: Password:
-        if 'Username:' in _log_file:
-            self.logger.error("The feature of collecting crawler_stats and crawler_engine via telnet "
-                              "temporarily only works for Scrapy 1.5.1 and its earlier version: %s", _log_file)
-            return
-        for part in self.parse_log_path(data['log_path']):
-            if part not in _log_file:
-                self.logger.warning("%s not found in settings['LOG_FILE']: %s", part, _log_file)
-                return
-
-        data['crawler_stats'] = self.telnet_io(b'stats.get_stats()') or data['crawler_stats']
-        if data['crawler_stats']:
-            # update_log_count=False to avoid wrong count in parse_appended_log() when the job is running
-            self.update_data_with_crawler_stats(data, data['crawler_stats'], update_log_count=False)
-        data['crawler_engine'] = self.telnet_io(b'est()') or data['crawler_engine']
-
-        self.logger.debug("crawler_stats:\n%s", self.json_dumps(data['crawler_stats']))
-        self.logger.debug("crawler_engine:\n%s", self.json_dumps(data['crawler_engine']))
-
-    @staticmethod
-    def telnet_callback(tn, command, option):
-        if command == DO and option == TTYPE:
-            tn.sendall(IAC + WILL + TTYPE)
-            tn.sendall(IAC + SB + TTYPE + '\0' + 'LogParser' + IAC + SE)
-        elif command in (DO, DONT):
-            tn.sendall(IAC + WILL + option)
-        elif command in (WILL, WONT):
-            tn.sendall(IAC + DO + option)
-
-    def telnet_io(self, command, return_text=False):
-        # Microsoft Telnet> o
-        # ( to )127.0.0.1 6023
-        # >>>stats.get_stats()
-        # >>>est()
-        self.tn.write(b'%s\n' % command)
-        content = self.tn.read_until(b'\n>>>', timeout=10)
-        # print(repr(content))
-        # b"\x1bc>>> \x1b[4hstats.get_stats()\r\r\r\n{'log_count/INFO': 61,
-        # 'start_time': datetime.datetime(2019, 1, 22, 9, 7, 14, 998126),
-        # 'httperror/response_ignored_status_count/404': 1}\r\r\r\n>>>"
-        # b' est()\r\r\r\nExecution engine status\r\r\r\n\r\r\r\n
-        # time()-engine.start_time                        : 3249.7548048496246
-        # engine.scraper.slot.needs_backout()             : False\r\r\r\n\r\r\r\n\r\r\r\n>>>'
-        text = content.decode('utf-8')
-        if return_text:
-            return text
-        m = re.search(r'{.+}', text)
-        if m:
-            result = self.parse_crawler_stats(m.group())
-        else:
-            lines = [line for line in re.split(r'\r\n|\n|\r', text) if ':' in line]
-            result = dict([re.split(r'\s*:\s*', line, maxsplit=1) for line in lines])
-            for k, v in result.items():
-                if k == 'engine.spider.name':
-                    continue
-                elif v == 'True':
-                    result[k] = True
-                elif v == 'False':
-                    result[k] = False
-                else:
-                    try:
-                        result[k] = int(float(v))
-                    except (TypeError, ValueError):
-                        pass
-
-        if result:
-            return self.get_ordered_dict(result, source='telnet')
-        else:
-            return {}

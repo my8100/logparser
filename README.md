@@ -1,4 +1,4 @@
-# LogParser: A tool for parsing Scrapy logfiles periodically and incrementally, designed for [*ScrapydWeb*](https://github.com/my8100/scrapydweb).
+# LogParser: A tool for parsing Scrapy log files periodically and incrementally, designed for [*ScrapydWeb*](https://github.com/my8100/scrapydweb).
 
 [![PyPI - logparser Version](https://img.shields.io/pypi/v/logparser.svg)](https://pypi.org/project/logparser/)
 [![Downloads - total](https://pepy.tech/badge/logparser)](https://pepy.tech/project/logparser)

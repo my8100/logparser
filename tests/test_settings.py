@@ -4,8 +4,6 @@ import os
 from shutil import copy
 import time
 
-from scrapy import __version__ as scrapy_version
-
 from tests.demo_log import END
 from tests.utils import cst
 
@@ -46,7 +44,7 @@ def test_scrapyd_logs_dir(psr):
         assert not os.path.exists(path)
 
 
-# PARSE_ROUND_INTERVAL = 60
+# PARSE_ROUND_INTERVAL = 10
 def test_parse_round_interval(psr):
     # mtime = os.path.getmtime(cst.LOG_JSON_PATH)
     start_time = time.time()
@@ -61,12 +59,9 @@ def test_parse_round_interval(psr):
 
 
 # ENABLE_TELNET = True
-def test_auto_disable_telnet(psr):
+def test_disable_telnet(psr):
     parser = psr(execute_main=False, enable_telnet=True)
-    if scrapy_version > '1.5.1':
-        assert not parser.ENABLE_TELNET
-    else:
-        assert parser.ENABLE_TELNET
+    assert parser.ENABLE_TELNET
 
     parser = psr(execute_main=False, enable_telnet=False)
     assert not parser.ENABLE_TELNET

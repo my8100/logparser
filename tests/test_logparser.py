@@ -251,7 +251,7 @@ def test_appended_log(psr):
     assert data['pages'] == 0
     assert data['items'] == 0
     for k in cst.LATEST_MATCHES_RESULT_DICT.keys():
-        if k in ['telnet_console', 'resuming_crawl', 'latest_stat']:
+        if k in ['scrapy_version', 'telnet_console', 'resuming_crawl', 'latest_stat']:
             assert data['latest_matches'][k]
         else:
             assert not data['latest_matches'][k]
@@ -260,8 +260,8 @@ def test_appended_log(psr):
         assert data['log_categories'][k]['details'] == []
     assert data['shutdown_reason'] == cst.NA
     assert data['finish_reason'] == cst.NA
-    assert '[scrapy.utils.log] INFO: Scrapy 1.5.0 started' in data['head']
-    assert '[scrapy.utils.log] INFO: Scrapy 1.5.0 started' in data['tail']
+    assert '[scrapy.utils.log] INFO: Scrapy 1.5.1 started' in data['head']
+    assert '[scrapy.utils.log] INFO: Scrapy 1.5.1 started' in data['tail']
 
     cst.write_text(cst.LOG_PATH, u'WARNING: warn\n' + front_mid, append=True)
     parser.main()
@@ -276,7 +276,10 @@ def test_appended_log(psr):
     assert data['pages'] == 2
     assert data['items'] == 1
     for k in cst.LATEST_MATCHES_RESULT_DICT.keys():
-        assert data['latest_matches'][k]
+        if k in ['telnet_username', 'telnet_password']:
+            assert not data['latest_matches'][k]
+        else:
+            assert data['latest_matches'][k]
     assert data['latest_matches']['latest_item'] == "{'item': 1}"
     for k, (count, __) in cst.LOG_CATEGORIES_RESULT_DICT.items():
         if k == 'error_logs':
@@ -303,7 +306,10 @@ def test_appended_log(psr):
     assert data['pages'] == 3
     assert data['items'] == 2
     for k in cst.LATEST_MATCHES_RESULT_DICT.keys():
-        assert data['latest_matches'][k]
+        if k in ['telnet_username', 'telnet_password']:
+            assert not data['latest_matches'][k]
+        else:
+            assert data['latest_matches'][k]
     for k, (count, __) in cst.LOG_CATEGORIES_RESULT_DICT.items():
         assert data['log_categories'][k]['count'] == count
         assert data['log_categories'][k]['details']
@@ -324,7 +330,10 @@ def test_appended_log(psr):
     assert data['pages'] == 3
     assert data['items'] == 2
     for k in cst.LATEST_MATCHES_RESULT_DICT.keys():
-        assert data['latest_matches'][k]
+        if k in ['telnet_username', 'telnet_password']:
+            assert not data['latest_matches'][k]
+        else:
+            assert data['latest_matches'][k]
     for k, (count, __) in cst.LOG_CATEGORIES_RESULT_DICT.items():
         assert data['log_categories'][k]['count'] == count
         assert data['log_categories'][k]['details']
@@ -346,7 +355,10 @@ def test_appended_log(psr):
     assert data['pages'] == 3
     assert data['items'] == 2
     for k in cst.LATEST_MATCHES_RESULT_DICT.keys():
-        assert data['latest_matches'][k]
+        if k in ['telnet_username', 'telnet_password']:
+            assert not data['latest_matches'][k]
+        else:
+            assert data['latest_matches'][k]
     for k, (count, __) in cst.LOG_CATEGORIES_RESULT_DICT.items():
         assert data['log_categories'][k]['count'] == count
         assert data['log_categories'][k]['details']
@@ -355,7 +367,7 @@ def test_appended_log(psr):
     # assert data['size'] == 15883  # != cst.SIZE 15862 '2018-10-23 18:28:34\n' \r\n => 15883
     # assert data['position'] == 15883  # != cst.SIZE 15862
     assert data['size'] == data['position']
-    assert '[scrapy.utils.log] INFO: Scrapy 1.5.0 started' in data['head']
+    assert '[scrapy.utils.log] INFO: Scrapy 1.5.1 started' in data['head']
     assert '[scrapy.core.engine] INFO: Spider closed' not in data['head']
-    assert '[scrapy.utils.log] INFO: Scrapy 1.5.0 started' not in data['tail']
+    assert '[scrapy.utils.log] INFO: Scrapy 1.5.1 started' not in data['tail']
     assert '[scrapy.core.engine] INFO: Spider closed' in data['tail']

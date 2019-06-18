@@ -494,7 +494,7 @@ class LogParser(Common):
         self.save_datas()
 
     def save_data(self, data):
-        with io.open(data['json_path'], 'w') as f:
+        with io.open(data['json_path'], mode='w', encoding='UTF-8') as f:
             self.json_dump(data, f)
         self.logger.warning("Saved to %s", data['json_path'])
 

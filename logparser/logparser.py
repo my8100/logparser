@@ -294,6 +294,10 @@ class LogParser(Common):
     def json_dumps(obj, sort_keys=False):
         return json.dumps(obj, ensure_ascii=False, indent=4, sort_keys=sort_keys)
 
+    @staticmethod
+    def json_dump(obj, f, sort_keys=False):
+        json.dump(obj, f, ensure_ascii=False, indent=4, sort_keys=sort_keys)
+
     def main(self):
         while True:
             if self.main_pid:
@@ -490,8 +494,8 @@ class LogParser(Common):
         self.save_datas()
 
     def save_data(self, data):
-        with io.open(data['json_path'], 'wb') as f:
-            f.write(self.json_dumps(data).encode('utf-8', 'replace'))
+        with io.open(data['json_path'], 'wb', encoding='utf-8') as f:
+            self.json_dump(data, f)
         self.logger.warning("Saved to %s", data['json_path'])
 
     def save_datas(self):

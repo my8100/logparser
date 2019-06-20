@@ -164,7 +164,7 @@ class Constant(object):
                 proc.communicate(timeout=timeout)
         return proc
 
-    def check_demo_data(self, data, without_stats_dumped=False, modified_logstats=False):
+    def check_demo_data(self, data, without_stats_dumped=False, modified_logstats=False, log_categories_limit=0):
         # 2018-10-23 18:29:41 [scrapy.core.engine] INFO: Closing spider (finished)
         # 2018-10-23 18:29:41 [scrapy.extensions.feedexport] INFO: Stored jsonlines feed
         if without_stats_dumped:
@@ -228,14 +228,19 @@ class Constant(object):
             assert data['log_categories'][k]['count'] == count
             # 'count' would exclude: 'DEBUG: Retrying <GET'
             # 'details' would include: 'DEBUG: Gave up retrying <GET'
-            if k == 'retry_logs':
-                assert len(data['log_categories'][k]['details']) == 3
-
+            actual_count = 3 if k == 'retry_logs' else count
+            expect_count = actual_count if log_categories_limit == 0 else min(log_categories_limit, actual_count)
+            assert len(data['log_categories'][k]['details']) == expect_count
+            # Ensure the last N but not the first N is kept, see test_log_categories_limit()
+            # 2018-10-23 18:28:35 [test] ERROR: error
+            # ...
+            # 2018-10-23 18:29:41 [scrapy.core.scraper] ERROR: Error downloading
+            if k == 'error_logs':
+                assert '2018-10-23 18:29:41 [scrapy.core.scraper] ERROR' in data['log_categories'][k]['details'][-1]
         assert data['shutdown_reason'] == self.NA
 
 
 cst = Constant()
-
 
 SETTINGS = dict(
     scrapyd_server=cst.SCRAPYD_SERVER,
@@ -247,10 +252,11 @@ SETTINGS = dict(
     log_extensions=cst.LOG_EXTENSIONS,
     log_head_lines=cst.LOG_HEAD_LINES,  # 100 => 50, 180 lines in total
     log_tail_lines=cst.LOG_TAIL_LINES,  # 200 => 100
-    delete_existing_json_files_at_startup=False,
-    keep_data_in_memory=False,
+    log_categories_limit=10,  # 10
     jobs_to_keep=100,
     chunk_size=10 * 1000 * 1000,  # 10 MB
+    delete_existing_json_files_at_startup=False,
+    keep_data_in_memory=False,
     # verbose=True,
     verbose=False,
     main_pid=0,

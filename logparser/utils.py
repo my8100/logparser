@@ -12,9 +12,10 @@ from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import urlopen
 
 from .__version__ import __version__
-from .settings import (SCRAPYD_SERVER, SCRAPYD_LOGS_DIR, PARSE_ROUND_INTERVAL, ENABLE_TELNET,
-                       OVERRIDE_TELNET_CONSOLE_HOST, LOG_ENCODING, LOG_EXTENSIONS, LOG_HEAD_LINES, LOG_TAIL_LINES,
-                       DELETE_EXISTING_JSON_FILES_AT_STARTUP, KEEP_DATA_IN_MEMORY, JOBS_TO_KEEP, CHUNK_SIZE, VERBOSE)
+from .settings import (SCRAPYD_SERVER, SCRAPYD_LOGS_DIR, PARSE_ROUND_INTERVAL,
+                       ENABLE_TELNET, OVERRIDE_TELNET_CONSOLE_HOST, LOG_ENCODING, LOG_EXTENSIONS,
+                       LOG_HEAD_LINES, LOG_TAIL_LINES, LOG_CATEGORIES_LIMIT, JOBS_TO_KEEP, CHUNK_SIZE,
+                       DELETE_EXISTING_JSON_FILES_AT_STARTUP, KEEP_DATA_IN_MEMORY, VERBOSE)
 
 
 custom_settings = dict(
@@ -27,10 +28,11 @@ custom_settings = dict(
     log_extensions=LOG_EXTENSIONS,
     log_head_lines=LOG_HEAD_LINES,
     log_tail_lines=LOG_TAIL_LINES,
-    delete_existing_json_files_at_startup=DELETE_EXISTING_JSON_FILES_AT_STARTUP,
-    keep_data_in_memory=KEEP_DATA_IN_MEMORY,
+    log_categories_limit=LOG_CATEGORIES_LIMIT,
     jobs_to_keep=JOBS_TO_KEEP,
     chunk_size=CHUNK_SIZE,
+    delete_existing_json_files_at_startup=DELETE_EXISTING_JSON_FILES_AT_STARTUP,
+    keep_data_in_memory=KEEP_DATA_IN_MEMORY,
     verbose=VERBOSE,
     # main_pid=0,
     # debug=False,

@@ -50,9 +50,10 @@ class LogParser(Common):
     # datas = {}  # Cause shared self.datas between test functions!
     logger = logger
 
-    def __init__(self, scrapyd_server, scrapyd_logs_dir, parse_round_interval, enable_telnet,
-                 override_telnet_console_host, log_encoding, log_extensions, log_head_lines, log_tail_lines,
-                 delete_existing_json_files_at_startup, keep_data_in_memory, jobs_to_keep, chunk_size, verbose,
+    def __init__(self, scrapyd_server, scrapyd_logs_dir, parse_round_interval,
+                 enable_telnet, override_telnet_console_host, log_encoding, log_extensions,
+                 log_head_lines, log_tail_lines, log_categories_limit, jobs_to_keep, chunk_size,
+                 delete_existing_json_files_at_startup, keep_data_in_memory, verbose,
                  main_pid=0, debug=False, exit_timeout=0):
         self.SCRAPYD_SERVER = scrapyd_server
         self.SCRAPYD_LOGS_DIR = scrapyd_logs_dir
@@ -64,10 +65,11 @@ class LogParser(Common):
         self.LOG_EXTENSIONS = log_extensions
         self.LOG_HEAD_LINES = log_head_lines
         self.LOG_TAIL_LINES = log_tail_lines
-        self.DELETE_EXISTING_JSON_FILES_AT_STARTUP = delete_existing_json_files_at_startup
-        self.KEEP_DATA_IN_MEMORY = keep_data_in_memory
+        self.LOG_CATEGORIES_LIMIT = log_categories_limit
         self.JOBS_TO_KEEP = jobs_to_keep
         self.CHUNK_SIZE = chunk_size
+        self.DELETE_EXISTING_JSON_FILES_AT_STARTUP = delete_existing_json_files_at_startup
+        self.KEEP_DATA_IN_MEMORY = keep_data_in_memory
 
         self.verbose = verbose
         if self.verbose:
@@ -382,6 +384,11 @@ class LogParser(Common):
             else:
                 data['tail'] = appended_log
         data['tail'] = self.cut_text(data['tail'], self.LOG_TAIL_LINES, keep_head=False)
+
+        # TO limit each item e.g. critical_logs in log_categories
+        # "log_categories": {"critical_logs": {"count": 0, "details": []}}
+        for k, v in data['log_categories'].items():
+            v.update(details=v['details'][-self.LOG_CATEGORIES_LIMIT:])
 
         self.logger.info("crawled_pages %s, scraped_items %s", data['pages'], data['items'])
 

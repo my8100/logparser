@@ -125,67 +125,12 @@ def test_log_headlines_taillines(psr):
     assert len(data['tail'].split('\n')) == 10
 
 
-# DELETE_EXISTING_JSON_FILES_AT_STARTUP = False
-# Executed in Parser.__init__()
-def test_delete_json_files(psr):
-    psr()
-    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH]:
-        assert os.path.exists(path)
-    with io.open(cst.LOG_JSON_TEMP_PATH, 'w', encoding=cst.LOG_ENCODING) as f:
-        f.write(u'')
-
-    parser = psr(execute_main=False, reset_logs=False, delete_existing_json_files_at_startup=False)
-    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH, cst.LOG_JSON_TEMP_PATH]:
-        assert os.path.exists(path)
-    parser.main()
-    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH, cst.LOG_JSON_TEMP_PATH]:
-        assert os.path.exists(path)
-
-    parser = psr(execute_main=False, reset_logs=False, delete_existing_json_files_at_startup=True)
-    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH, cst.LOG_JSON_TEMP_PATH]:
-        assert not os.path.exists(path)
-    parser.main()
-    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH]:
-        assert os.path.exists(path)
-    assert not os.path.exists(cst.LOG_JSON_TEMP_PATH)
-
-
-# KEEP_DATA_IN_MEMORY = False
-def test_keep_data_in_memory(psr):
-    datas_full_keys_set = set(cst.META_KEYS + cst.PARSE_KEYS + cst.FULL_EXTENDED_KEYS)
-    datas_simplified_keys_set = set(cst.META_KEYS + cst.SIMPLIFIED_KEYS)
-
-    parser = psr(keep_data_in_memory=True)
-    datas_full = cst.read_data(cst.DATAS_COMPLETE_JSON_PATH)
-    for k in [cst.LOG_PATH, cst.TXT_PATH]:
-        assert set(datas_full[k].keys()) == datas_full_keys_set
-    datas_simplified = cst.read_data(cst.DATAS_SIMPLIFIED_JSON_PATH)
-    for k in [cst.LOG_PATH, cst.TXT_PATH]:
-        assert set(datas_simplified[k].keys()) == datas_full_keys_set
-    # keys_redundant
-    # DEBUG: Simplify demo_txt/test_txt/2019-01-01T00_00_02 in memory
-    os.remove(cst.TXT_PATH)
-    parser.main()
-    datas_full = cst.read_data(cst.DATAS_COMPLETE_JSON_PATH)
-    for k in [cst.LOG_PATH, cst.TXT_PATH]:
-        assert set(datas_full[k].keys()) == datas_full_keys_set
-    datas_simplified = cst.read_data(cst.DATAS_SIMPLIFIED_JSON_PATH)
-    assert set(datas_simplified[cst.LOG_PATH].keys()) == datas_full_keys_set
-    assert set(datas_simplified[cst.TXT_PATH].keys()) == datas_simplified_keys_set
-
-    parser = psr(keep_data_in_memory=False)
-    datas_full = cst.read_data(cst.DATAS_COMPLETE_JSON_PATH)
-    for k in [cst.LOG_PATH, cst.TXT_PATH]:
-        assert set(datas_full[k].keys()) == datas_full_keys_set
-    datas_simplified = cst.read_data(cst.DATAS_SIMPLIFIED_JSON_PATH)
-    for k in [cst.LOG_PATH, cst.TXT_PATH]:
-        assert set(datas_simplified[k].keys()) == datas_simplified_keys_set
-    # New round of parsing, old file with new size, test self.cst.read_data(), found invalid cst.LOG_JSON_PATH
-    cst.write_text(cst.LOG_PATH, u'appended_log\n', append=True)
-    parser.main()
-    cst.write_text(cst.LOG_JSON_PATH, u'')
-    cst.write_text(cst.LOG_PATH, END, append=True)
-    parser.main()
+# LOG_CATEGORIES_LIMIT = 10
+def test_log_categories_limit(psr):
+    log_categories_limit = 3
+    parser = psr(log_categories_limit=log_categories_limit)
+    data = cst.read_data(cst.LOG_JSON_PATH)
+    cst.check_demo_data(data, log_categories_limit=log_categories_limit)
 
 
 # JOBS_TO_KEEP=100
@@ -253,6 +198,69 @@ def test_chunk_size(psr):
     assert data['latest_log_time'] == '2018-10-23 18:29:42'
     cst.check_demo_data(data)
     assert os.path.getsize(cst.APPENDED_LOG_PATH) == 5938 if len(os.linesep) == 2 else 5745
+
+
+# DELETE_EXISTING_JSON_FILES_AT_STARTUP = False
+# Executed in Parser.__init__()
+def test_delete_json_files(psr):
+    psr()
+    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH]:
+        assert os.path.exists(path)
+    with io.open(cst.LOG_JSON_TEMP_PATH, 'w', encoding=cst.LOG_ENCODING) as f:
+        f.write(u'')
+
+    parser = psr(execute_main=False, reset_logs=False, delete_existing_json_files_at_startup=False)
+    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH, cst.LOG_JSON_TEMP_PATH]:
+        assert os.path.exists(path)
+    parser.main()
+    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH, cst.LOG_JSON_TEMP_PATH]:
+        assert os.path.exists(path)
+
+    parser = psr(execute_main=False, reset_logs=False, delete_existing_json_files_at_startup=True)
+    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH, cst.LOG_JSON_TEMP_PATH]:
+        assert not os.path.exists(path)
+    parser.main()
+    for path in [cst.LOG_JSON_PATH, cst.TXT_JSON_PATH]:
+        assert os.path.exists(path)
+    assert not os.path.exists(cst.LOG_JSON_TEMP_PATH)
+
+
+# KEEP_DATA_IN_MEMORY = False
+def test_keep_data_in_memory(psr):
+    datas_full_keys_set = set(cst.META_KEYS + cst.PARSE_KEYS + cst.FULL_EXTENDED_KEYS)
+    datas_simplified_keys_set = set(cst.META_KEYS + cst.SIMPLIFIED_KEYS)
+
+    parser = psr(keep_data_in_memory=True)
+    datas_full = cst.read_data(cst.DATAS_COMPLETE_JSON_PATH)
+    for k in [cst.LOG_PATH, cst.TXT_PATH]:
+        assert set(datas_full[k].keys()) == datas_full_keys_set
+    datas_simplified = cst.read_data(cst.DATAS_SIMPLIFIED_JSON_PATH)
+    for k in [cst.LOG_PATH, cst.TXT_PATH]:
+        assert set(datas_simplified[k].keys()) == datas_full_keys_set
+    # keys_redundant
+    # DEBUG: Simplify demo_txt/test_txt/2019-01-01T00_00_02 in memory
+    os.remove(cst.TXT_PATH)
+    parser.main()
+    datas_full = cst.read_data(cst.DATAS_COMPLETE_JSON_PATH)
+    for k in [cst.LOG_PATH, cst.TXT_PATH]:
+        assert set(datas_full[k].keys()) == datas_full_keys_set
+    datas_simplified = cst.read_data(cst.DATAS_SIMPLIFIED_JSON_PATH)
+    assert set(datas_simplified[cst.LOG_PATH].keys()) == datas_full_keys_set
+    assert set(datas_simplified[cst.TXT_PATH].keys()) == datas_simplified_keys_set
+
+    parser = psr(keep_data_in_memory=False)
+    datas_full = cst.read_data(cst.DATAS_COMPLETE_JSON_PATH)
+    for k in [cst.LOG_PATH, cst.TXT_PATH]:
+        assert set(datas_full[k].keys()) == datas_full_keys_set
+    datas_simplified = cst.read_data(cst.DATAS_SIMPLIFIED_JSON_PATH)
+    for k in [cst.LOG_PATH, cst.TXT_PATH]:
+        assert set(datas_simplified[k].keys()) == datas_simplified_keys_set
+    # New round of parsing, old file with new size, test self.cst.read_data(), found invalid cst.LOG_JSON_PATH
+    cst.write_text(cst.LOG_PATH, u'appended_log\n', append=True)
+    parser.main()
+    cst.write_text(cst.LOG_JSON_PATH, u'')
+    cst.write_text(cst.LOG_PATH, END, append=True)
+    parser.main()
 
 
 # VERBOSE = False

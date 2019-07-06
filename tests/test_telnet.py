@@ -13,8 +13,11 @@ def test_telnet(psr):
     cwd = os.getcwd()
     os.chdir(cst.DEMO_PROJECT_PATH)
     try:
-        for version in ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0']:
-            cmd = 'pip install scrapy==%s' % version
+        for version in ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']:
+            if version == 'latest':
+                cmd = 'pip install scrapy>=%s' % '1.6.0'
+            else:
+                cmd = 'pip install scrapy==%s' % version
             cst.sub_process(cmd, block=True)
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
             cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
@@ -34,7 +37,10 @@ def test_telnet(psr):
             parser.main()
 
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-            assert log_data['latest_matches']['scrapy_version'] == version
+            if version == 'latest':
+                assert log_data['latest_matches']['scrapy_version'] >= '1.6.0'
+            else:
+                assert log_data['latest_matches']['scrapy_version'] == version
             assert log_data['log_categories']['critical_logs']['count'] == 0
             assert log_data['log_categories']['error_logs']['count'] == 0
             if version == '1.5.0':

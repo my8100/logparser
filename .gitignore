@@ -10,6 +10,7 @@ instance/
 
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 
 dist/

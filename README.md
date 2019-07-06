@@ -1,9 +1,11 @@
 # LogParser: A tool for parsing Scrapy log files periodically and incrementally, designed for [*ScrapydWeb*](https://github.com/my8100/scrapydweb).
 
 [![PyPI - logparser Version](https://img.shields.io/pypi/v/logparser.svg)](https://pypi.org/project/logparser/)
+[![CircleCI](https://circleci.com/gh/my8100/logparser/tree/master.svg?style=shield)](https://circleci.com/gh/my8100/logparser/tree/master)
+[![codecov](https://codecov.io/gh/my8100/logparser/branch/master/graph/badge.svg)](https://codecov.io/gh/my8100/logparser)
+[![Coverage Status](https://coveralls.io/repos/github/my8100/logparser/badge.svg?branch=master)](https://coveralls.io/github/my8100/logparser?branch=master)
 [![Downloads - total](https://pepy.tech/badge/logparser)](https://pepy.tech/project/logparser)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/logparser.svg)](https://pypi.org/project/logparser/)
-[![Coverage Status](https://coveralls.io/repos/github/my8100/logparser/badge.svg?branch=master)](https://coveralls.io/github/my8100/logparser?branch=master)
 [![GitHub license](https://img.shields.io/github/license/my8100/logparser.svg)](https://github.com/my8100/logparser/blob/master/LICENSE)
 
 

@@ -15,7 +15,7 @@ def test_telnet(psr):
     try:
         for version in ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']:
             if version == 'latest':
-                cmd = 'pip install scrapy>=%s' % '1.6.0'
+                cmd = 'pip install -U scrapy'
             else:
                 cmd = 'pip install scrapy==%s' % version
             cst.sub_process(cmd, block=True)

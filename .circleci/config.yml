@@ -53,15 +53,20 @@ jobs:
       - run:
           name: Run tests
           command: |
+            ls -l
             . venv/bin/activate
             flake8 . --count --exclude=./venv* --select=E9,F63,F7,F82 --show-source --statistics
             coverage erase
             coverage run --source=logparser -m pytest tests -s -vv -l --disable-warnings
+      - run:
+          name: Generate report
+          command: |
+            . venv/bin/activate
             coverage report
             coverage html
             coverage xml
-            coveralls
             ls -la
+            coveralls
       - store_artifacts:
           path: htmlcov
       - store_artifacts:

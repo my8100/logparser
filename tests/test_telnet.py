@@ -1,10 +1,16 @@
 # coding: utf-8
 import os
+import platform
 import re
 import time
 
+# Used in test_telnet_fail()
 from tests.demo_log import TELNET_151_NO_PORT, TELNET_151_PORT_16023, TELNET_160_PORT_16024
 from tests.utils import cst
+
+
+# Linux-5.0.9-301.fc30.x86_64-x86_64-with-fedora-30-Thirty'
+on_fedora = 'fedora' in platform.platform()
 
 
 def test_telnet(psr):
@@ -15,7 +21,7 @@ def test_telnet(psr):
     try:
         for version in ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']:
             if version == 'latest':
-                cmd = 'pip install -U scrapy'
+                cmd = 'pip install --upgrade scrapy'
             else:
                 cmd = 'pip install scrapy==%s' % version
             cst.sub_process(cmd, block=True)
@@ -64,7 +70,7 @@ def test_telnet(psr):
                 assert log_data['finish_reason'] == 'closespider_timeout'
                 assert log_data['crawler_stats']
                 assert log_data['crawler_stats']['source'] == 'log'
-                if version == '1.5.0' or (cst.ON_WINDOWS and version > '1.5.1'):
+                if version == '1.5.0' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
                     assert not log_data['crawler_engine']
                 else:
                     assert log_data['crawler_engine']
@@ -82,7 +88,7 @@ def test_disable_telnet(psr):
     cwd = os.getcwd()
     os.chdir(cst.DEMO_PROJECT_PATH)
     try:
-        version = '1.5.1' if cst.ON_WINDOWS else '1.6.0'
+        version = '1.5.1' if (cst.ON_WINDOWS or on_fedora) else '1.6.0'
         cmd = 'pip install scrapy==%s' % version
         cst.sub_process(cmd, block=True)
         for name in ['enable_telnet', 'disable_telnet']:

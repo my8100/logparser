@@ -128,7 +128,7 @@ def test_log_headlines_taillines(psr):
 # LOG_CATEGORIES_LIMIT = 10
 def test_log_categories_limit(psr):
     log_categories_limit = 3
-    parser = psr(log_categories_limit=log_categories_limit)
+    psr(log_categories_limit=log_categories_limit)
     data = cst.read_data(cst.LOG_JSON_PATH)
     cst.check_demo_data(data, log_categories_limit=log_categories_limit)
 

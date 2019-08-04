@@ -99,7 +99,10 @@ class ScrapyLogParser(Common):
     def extract_latest_matches(self):
         self.data['latest_matches'] = OrderedDict()
         for k, v in self.LATEST_MATCHES_PATTERN_DICT.items():
-            step = 1 if k in ['scrapy_version', 'telnet_console', 'telnet_username', 'telnet_password', 'resuming_crawl'] else -1
+            if k in ['scrapy_version', 'telnet_console', 'telnet_username', 'telnet_password', 'resuming_crawl']:
+                step = 1
+            else:
+                step = -1
             result = self.re_search_final_match(v, step=step)
             if result:
                 if k == 'scrapy_version':

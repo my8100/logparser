@@ -2,6 +2,7 @@
 import io
 import logging
 import os
+import platform
 import re
 import sys
 from telnetlib import DO, DONT, IAC, SB, SE, Telnet, TTYPE, WILL, WONT
@@ -29,6 +30,8 @@ TELNETCONSOLE_COMMAND_MAP = dict(
 # noinspection PyBroadException
 class MyTelnet(Common):
     logger = logger
+    # Linux-5.0.9-301.fc30.x86_64-x86_64-with-fedora-30-Thirty'
+    on_fedora = 'fedora' in platform.platform()
 
     def __init__(self, data, override_telnet_console_host, verbose):
         self.data = data
@@ -75,8 +78,12 @@ class MyTelnet(Common):
     # https://stackoverflow.com/questions/18547412/python-telnetlib-to-connect-to-scrapy-telnet-to-read-stats
     def run(self):
         self.logger.debug("scrapy_version: %s", self.scrapy_version)
-        if self.ON_WINDOWS and self.scrapy_version > SUPPORTED_SCRAPY_VERSION:
-            self.logger.error("Telnet only supports scrapy<=%s on Windows, current scrapy_version: %s",
+        # Telnet via pexpect would cause '[twisted] CRITICAL: Unhandled Error' in Scrapy log on Fedora:
+        # twisted/conch/telnet.py line 585, in dataReceived
+        # raise ValueError("Stumped", b)
+        # builtins.ValueError: ('Stumped', b'\\xec')
+        if (self.ON_WINDOWS or self.on_fedora) and self.scrapy_version > SUPPORTED_SCRAPY_VERSION:
+            self.logger.error("Telnet only supports scrapy<=%s on Windows and Fedora, current scrapy_version: %s",
                               SUPPORTED_SCRAPY_VERSION, self.scrapy_version)
             return
         # Telnet console listening on 127.0.0.1:6023

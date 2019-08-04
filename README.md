@@ -1,11 +1,11 @@
 # LogParser: A tool for parsing Scrapy log files periodically and incrementally, designed for [*ScrapydWeb*](https://github.com/my8100/scrapydweb).
 
 [![PyPI - logparser Version](https://img.shields.io/pypi/v/logparser.svg)](https://pypi.org/project/logparser/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/logparser.svg)](https://pypi.org/project/logparser/)
 [![CircleCI](https://circleci.com/gh/my8100/logparser/tree/master.svg?style=shield)](https://circleci.com/gh/my8100/logparser/tree/master)
 [![codecov](https://codecov.io/gh/my8100/logparser/branch/master/graph/badge.svg)](https://codecov.io/gh/my8100/logparser)
 [![Coverage Status](https://coveralls.io/repos/github/my8100/logparser/badge.svg?branch=master)](https://coveralls.io/github/my8100/logparser?branch=master)
 [![Downloads - total](https://pepy.tech/badge/logparser)](https://pepy.tech/project/logparser)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/logparser.svg)](https://pypi.org/project/logparser/)
 [![GitHub license](https://img.shields.io/github/license/my8100/logparser.svg)](https://github.com/my8100/logparser/blob/master/LICENSE)
 
 
@@ -14,8 +14,13 @@
 ```bash
 pip install logparser
 ```
+:heavy_exclamation_mark: Note that you may need to execute `python -m pip install --upgrade pip` first in order to get the latest version of logparser, or download the tar.gz file from https://pypi.org/project/logparser/#files and get it installed via `pip install logparser-x.x.x.tar.gz`
 
 - Use git:
+```bash
+pip install --upgrade git+https://github.com/my8100/logparser.git
+```
+Or:
 ```bash
 git clone https://github.com/my8100/logparser.git
 cd logparser

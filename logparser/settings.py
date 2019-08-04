@@ -17,15 +17,11 @@ GitHub: https://github.com/my8100/logparser
 
 
 ############################## Basic Settings ##############################
-# Only use for 'json_url' in the generated file 'stats.json' resides in SCRAPYD_LOGS_DIR.
-# The default is '127.0.0.1:6800', so that the stats of Scrapyd jobs can be accessed at:
-# http://127.0.0.1:6800/logs/stats.json
-SCRAPYD_SERVER = '127.0.0.1:6800'
-
-# The directory in which LogParser would locate and parse the Scrapy log files.
-# Check out below url to find out where the Scrapy logs are stored:
-# https://scrapyd.readthedocs.io/en/stable/config.html#logs-dir
-# e.g. 'C:/Users/username/logs/' or '/home/username/logs/'
+# Enter the directory when you run Scrapyd, run the command below
+# to find out where the Scrapy logs are stored:
+# python -c "from os.path import abspath, isdir; from scrapyd.config import Config; path = abspath(Config().get('logs_dir')); print(path); print(isdir(path))"
+# Check out https://scrapyd.readthedocs.io/en/stable/config.html#logs-dir for more info.
+# e.g. 'C:/Users/username/logs' or '/home/username/logs'
 SCRAPYD_LOGS_DIR = ''
 
 # Sleep N seconds before starting next round of parsing, the default is 10.
@@ -33,9 +29,14 @@ PARSE_ROUND_INTERVAL = 10
 
 
 ############################## Advanced Settings ##############################
+# Only use for 'json_url' in the generated file 'stats.json' resides in SCRAPYD_LOGS_DIR.
+# The default is '127.0.0.1:6800', so that the stats of Scrapyd jobs can be accessed at:
+# http://127.0.0.1:6800/logs/stats.json
+SCRAPYD_SERVER = '127.0.0.1:6800'
+
 # Whether to collect Crawler.stats and Crawler.engine via telnet, the default is True.
 # Check out https://doc.scrapy.org/en/latest/topics/telnetconsole.html for more info.
-# Note that this feature only works for scrapy<=1.5.1 if you are using Windows.
+# Note that this feature only works for Scrapy<=1.5.1 if you are running Scrapyd on Windows or Fedora.
 ENABLE_TELNET = True
 
 # The default is '', set up this option only when you are using docker-compose.

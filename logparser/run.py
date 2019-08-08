@@ -17,7 +17,7 @@ STAR = '\n%s\n' % ('*' * 100)
 
 def main():
     logger.info("LogParser version: %s", __version__)
-    logger.info("Use 'logparser -h' to get help")
+    logger.info("Run 'logparser -h' to get help")
     logger.info("Main pid: %s", os.getpid())
     logger.info("Check out the config file below for more advanced settings.")
     print(u"{star}Loading settings from {path}{star}".format(star=STAR, path=SETTINGS_PY_PATH.replace('\\', '/')))

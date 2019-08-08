@@ -24,7 +24,7 @@ GitHub: https://github.com/my8100/logparser
 # e.g. 'C:/Users/username/logs' or '/home/username/logs'
 SCRAPYD_LOGS_DIR = ''
 
-# Sleep N seconds before starting next round of parsing, the default is 10.
+# Sleep for N seconds before starting next round of parsing, the default is 10.
 PARSE_ROUND_INTERVAL = 10
 
 
@@ -76,5 +76,5 @@ DELETE_EXISTING_JSON_FILES_AT_STARTUP = False
 # Set it to False to reduce the RAM usage of LogParser.
 KEEP_DATA_IN_MEMORY = False
 
-# The default is False, set it to True to set the logging level from WARNING to DEBUG
+# The default is False, set it to True to set the logging level from INFO to DEBUG
 VERBOSE = False

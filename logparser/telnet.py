@@ -40,7 +40,7 @@ class MyTelnet(Common):
         if self.verbose:
             self.logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(logging.WARNING)
+            self.logger.setLevel(logging.INFO)
 
         self.scrapy_version = self.data['latest_matches']['scrapy_version'] or '0.0.0'
         self.telnet_console = self.data['latest_matches']['telnet_console']
@@ -83,8 +83,8 @@ class MyTelnet(Common):
         # raise ValueError("Stumped", b)
         # builtins.ValueError: ('Stumped', b'\\xec')
         if (self.ON_WINDOWS or self.on_fedora) and self.scrapy_version > SUPPORTED_SCRAPY_VERSION:
-            self.logger.error("Telnet only supports scrapy<=%s on Windows and Fedora, current scrapy_version: %s",
-                              SUPPORTED_SCRAPY_VERSION, self.scrapy_version)
+            self.logger.error("Telnet only supports scrapy<=%s if you are running Scrapyd on Windows and Fedora, "
+                              "current scrapy_version: %s", SUPPORTED_SCRAPY_VERSION, self.scrapy_version)
             return
         # Telnet console listening on 127.0.0.1:6023
         m = re.search(r'^(.+):(\d+)$', self.telnet_console)

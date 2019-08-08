@@ -75,7 +75,7 @@ class LogParser(Common):
         if self.verbose:
             self.logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(logging.WARNING)
+            self.logger.setLevel(logging.INFO)
         self.DEBUG = debug
         self.EXIT_TIMEOUT = exit_timeout
 
@@ -83,8 +83,9 @@ class LogParser(Common):
         self.logparser_pid = os.getpid()
 
         # TypeError: Object of type set is not JSON serializable
-        self.logger.info(self.json_dumps(vars(self)))
+        self.logger.debug(self.json_dumps(vars(self)))
 
+        self.stats_json_path = os.path.join(self.SCRAPYD_LOGS_DIR, 'stats.json')
         self.stats_json_url = 'http://%s/logs/stats.json' % self.SCRAPYD_SERVER
         self.logparser_version = __version__
         self.init_time = time.time()
@@ -95,7 +96,7 @@ class LogParser(Common):
         if self.DELETE_EXISTING_JSON_FILES_AT_STARTUP:
             self.delete_existing_results()
 
-        if not os.path.exists(os.path.join(self.SCRAPYD_LOGS_DIR, 'stats.json')):
+        if not os.path.exists(self.stats_json_path):
             self.save_text_into_logs_dir('stats.json', self.json_dumps(self.get_default_stats()))
 
     def calc_runtime(self, start_string, end_string):
@@ -152,7 +153,7 @@ class LogParser(Common):
         lines = re.split(r'\n', text)  # KEEP the same '\n'
         m = re.search(self.PATTERN_LOG_ENDING, text)
         if m:
-            self.logger.info("Found log ending:%s", self.format_log_block('log ending', m.group()))
+            self.logger.info("Found log ending:\n%s", self.format_log_block('log ending', m.group()))
             text_to_ignore = ''
         else:
             # To ensure the integrity of a log with multilines, e.g. error with traceback info,
@@ -204,7 +205,7 @@ class LogParser(Common):
         size = os.path.getsize(log_path)
 
         if log_path not in self.datas:
-            self.logger.warning("New logfile found: %s (%s bytes)", log_path, size)
+            self.logger.info("New logfile found: %s (%s bytes)", log_path, size)
             json_path = os.path.join(self.SCRAPYD_LOGS_DIR, project, spider, '%s.json' % job)
             json_url = 'http://%s/logs/%s/%s/%s.json' % (self.SCRAPYD_SERVER, project, spider, job)
             # NOTE: do not use handle_slash() on log_path since parse_log_path() use os.sep
@@ -215,11 +216,11 @@ class LogParser(Common):
             loaded_data = self.read_data(json_path)
             if loaded_data.get('size', -1) == size:
                 data.update(loaded_data)  # AVOID using data =
-                self.logger.warning("New logfile and its data with same size found: %s (size: %s) -> skip",
-                                    json_path, loaded_data['size'])
+                self.logger.info("New logfile and its data with same size found: %s (size: %s) -> skip",
+                                 json_path, loaded_data['size'])
                 return
             else:
-                self.logger.warning("New logfile: %s (%s bytes) -> parse", log_path, size)
+                self.logger.info("New logfile: %s (%s bytes) -> parse", log_path, size)
         elif size < self.datas[log_path]['size']:
             self.logger.warning("Old logfile with smaller size: %s (before: %s, now: %s bytes) -> parse in next round",
                                 log_path, self.datas[log_path]['size'], size)
@@ -229,7 +230,7 @@ class LogParser(Common):
             self.logger.debug("Old logfile with old size: %s (%s bytes) -> skip", log_path, size)
             return
         else:
-            self.logger.warning("Old logfile with new size: %s (%s bytes) -> parse", log_path, size)
+            self.logger.info("Old logfile with new size: %s (%s bytes) -> parse", log_path, size)
             data = self.datas[log_path]
 
             if not self.KEEP_DATA_IN_MEMORY:
@@ -248,7 +249,7 @@ class LogParser(Common):
         # f.seek(1000000) => f.tell() 1000000   # unexpected
         # Add max() for logfile with 0 size
         for __ in range(data['position'], max(1, data['size']), self.CHUNK_SIZE):
-            self.logger.info("Remaining size to be read: %s bytes", data['size'] - data['position'])
+            self.logger.debug("Remaining size to be read: %s bytes", data['size'] - data['position'])
             appended_log = self.read_appended_log(data, size=self.CHUNK_SIZE)
             if self.DEBUG:
                 self.save_text_into_logs_dir('appended_log.log', appended_log)
@@ -296,7 +297,7 @@ class LogParser(Common):
                     self.logger.critical("GoodBye, EXIT_TIMEOUT: %s", self.EXIT_TIMEOUT)
                     break
                 else:
-                    self.logger.warning("Sleep %s seconds", self.PARSE_ROUND_INTERVAL)
+                    self.logger.info("Sleeping for %ss", self.PARSE_ROUND_INTERVAL)
                     time.sleep(self.PARSE_ROUND_INTERVAL)
             except KeyboardInterrupt:
                 if self.main_pid:
@@ -390,7 +391,7 @@ class LogParser(Common):
         for k, v in data['log_categories'].items():
             v.update(details=v['details'][-self.LOG_CATEGORIES_LIMIT:])
 
-        self.logger.info("crawled_pages %s, scraped_items %s", data['pages'], data['items'])
+        self.logger.info("crawled_pages: %s, scraped_items: %s", data['pages'], data['items'])
 
     def read_appended_log(self, data, size=-1, backoff_times=10):
         # If the argument size is omitted, None, or negative, reads and returns all data until EOF.
@@ -428,13 +429,13 @@ class LogParser(Common):
         else:
             data['position'] = current_stream_position - len(text_to_ignore.encode(self.LOG_ENCODING))
             appended_log = text[:-len(text_to_ignore)] if text_to_ignore else text
-            self.logger.info("Found appended log:%s",
-                             self.format_log_block('appended log', appended_log, lines_limit=10))
+            self.logger.debug("Found appended log:\n%s",
+                              self.format_log_block('appended log', appended_log, lines_limit=10))
             return appended_log
 
     def read_data(self, json_path):
         data = {}
-        self.logger.info("Try to load json file: %s", json_path)
+        self.logger.debug("Try to load json file: %s", json_path)
         if not os.path.exists(json_path):
             self.logger.warning("Json file not found: %s", json_path)
         else:
@@ -484,7 +485,7 @@ class LogParser(Common):
     def save_data(self, data):
         with io.open(data['json_path'], 'wb') as f:
             f.write(self.json_dumps(data).encode('utf-8', 'replace'))
-        self.logger.warning("Saved to %s", data['json_path'])
+        self.logger.info("Saved to %s", data['json_path'])
 
     def save_datas(self):
         stats = self.get_default_stats()
@@ -499,16 +500,19 @@ class LogParser(Common):
             stats['datas'][project].setdefault(spider, {})
             stats['datas'][project][spider][job] = data
         text = self.json_dumps(stats)
+        self.logger.debug("stats.json:\n%s", text)
         self.save_text_into_logs_dir('stats.json', text)
-        self.logger.warning("Saved to %s", self.stats_json_url)
-        self.logger.debug("stats.json: \n%s", text)
 
     def save_text_into_logs_dir(self, filename, text):
         path = os.path.join(self.SCRAPYD_LOGS_DIR, filename)
         with io.open(path, 'wb') as f:
             content = text.encode('utf-8', 'replace')
             f.write(content)
-            self.logger.info("Saved to %s (%s bytes)", filename, len(content))
+            if filename == 'stats.json':
+                self.logger.info("Saved to %s (%s bytes). Visit stats at: %s", self.stats_json_path,
+                                 len(content), self.stats_json_url)
+            else:
+                self.logger.info("Saved to %s (%s bytes)", filename, len(content))
 
     @staticmethod
     def simplify_data(data):
@@ -520,9 +524,9 @@ class LogParser(Common):
     def simplify_datas_in_memory(self):
         all_keys = set(self.datas.keys())
         redundant_keys = all_keys.difference(self.existing_file_keys)
-        self.logger.info("all_keys: %s", len(all_keys))
-        self.logger.info("existing_file_keys: %s", len(self.existing_file_keys))
-        self.logger.info("redundant_keys: %s", len(redundant_keys))
+        self.logger.debug("all_keys: %s", len(all_keys))
+        self.logger.debug("existing_file_keys: %s", len(self.existing_file_keys))
+        self.logger.debug("redundant_keys: %s", len(redundant_keys))
         if self.KEEP_DATA_IN_MEMORY:
             keys_to_simplify = redundant_keys
         else:
@@ -532,17 +536,17 @@ class LogParser(Common):
                 continue
             self.logger.debug("Simplify %s in memory", key)
             self.datas[key] = self.simplify_data(self.datas[key])
-        self.logger.info("Datas in memory: ")
+        self.logger.debug("Datas in memory: ")
         for key, value in self.datas.items():
-            self.logger.info("%s: %s keys, size %s", key, len(value), sys.getsizeof(value))
+            self.logger.debug("%s: %s keys, size %s", key, len(value), sys.getsizeof(value))
 
         # Remove data of deleted log to reduce the size of the stats.json file
         if len(all_keys) > self.JOBS_TO_KEEP and redundant_keys:
-            self.logger.info("JOBS_TO_KEEP: %s", self.JOBS_TO_KEEP)
-            self.logger.info("Limit the size of all_keys in memory: %s", len(all_keys))
+            self.logger.debug("JOBS_TO_KEEP: %s", self.JOBS_TO_KEEP)
+            self.logger.debug("Limit the size of all_keys in memory: %s", len(all_keys))
             for key in redundant_keys:
                 self.datas.pop(key)
                 self.logger.debug("Pop key: %s", key)
-            self.logger.info("Now all_keys in memory: %s", len(self.datas))
+            self.logger.debug("Now all_keys in memory: %s", len(self.datas))
         else:
-            self.logger.info("all_keys in memory: %s", len(self.datas))
+            self.logger.debug("all_keys in memory: %s", len(self.datas))

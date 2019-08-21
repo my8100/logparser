@@ -1,8 +1,13 @@
 # coding: utf-8
+import json
+
 from logparser import parse
 
-from tests.demo_log import (ERROR_404, SHUTDOWN, FRONT, END, TELNET_160_DEFAULT, TELNET_160_USERNAME,
-                            TELNET_160_PASSWORD, TELNET_160_USERNAME_PASSWORD)
+from tests.demo_log import (ERROR_404, SHUTDOWN, FRONT, END,
+                            TELNET_160_DEFAULT, TELNET_160_USERNAME,
+                            TELNET_160_PASSWORD, TELNET_160_USERNAME_PASSWORD,
+                            LATEST_SCRAPE_ITEM_ONE_LINE, LATEST_SCRAPE_ITEM_MULTIPLE_LINES,
+                            LATEST_SCRAPE_ITEM_MIXED, SCRAPY_FIELDSTATS)
 from tests.utils import cst
 
 
@@ -105,6 +110,7 @@ def test_shutdown_reason():
     assert data['shutdown_reason'] == 'Received SIGTERM'
     assert data['finish_reason'] == 'shutdown'
 
+
 def test_telnet_info():
     data = parse(TELNET_160_DEFAULT)
     d = data['latest_matches']
@@ -127,3 +133,26 @@ def test_telnet_info():
     d = data['latest_matches']
     assert d['telnet_username'] == 'usr123'
     assert d['telnet_password'] == '456psw'
+
+
+def test_latest_scrape_item():
+    data = parse(LATEST_SCRAPE_ITEM_ONE_LINE)
+    d = data['latest_matches']
+    assert d['latest_scrape'] == '2019-01-01 00:00:01 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    assert d['latest_item'] == "{'item': 1}"
+
+    data = parse(LATEST_SCRAPE_ITEM_MULTIPLE_LINES)
+    d = data['latest_matches']
+    assert d['latest_scrape'] == '2019-01-01 00:00:02 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    assert json.loads(d['latest_item'].replace("'", '"')) == dict(item=2)
+
+    data = parse(LATEST_SCRAPE_ITEM_MIXED)
+    d = data['latest_matches']
+    assert d['latest_scrape'] == '2019-01-01 00:00:03 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    assert json.loads(d['latest_item'].replace("u'", "'").replace("'", '"')) == dict(item={u'Chinese 汉字': 3})
+
+
+def test_scrapy_fieldstats():
+    data = parse(SCRAPY_FIELDSTATS)
+    d = data['crawler_stats']
+    assert d['fields_coverage'] == {u'Chinese 汉字': '50%', 'author': {'a': 1, 'b': 2}}

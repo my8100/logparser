@@ -120,6 +120,11 @@ class ScrapyLogParser(Common):
                     result = m.group(2) if m else ''
             self.data['latest_matches'][k] = result
 
+        for m in self.LATEST_SCRAPE_ITEM_PATTERN.finditer(self.text):
+            self.data['latest_matches']['latest_scrape'], self.data['latest_matches']['latest_item'] = m.groups()
+        self.data['latest_matches'].setdefault('latest_scrape', '')
+        self.data['latest_matches'].setdefault('latest_item', '')
+
         # Scrapyd in PY2: u"{u'Chinese \\u6c49\\u5b57 1':"
         latest_item = self.data['latest_matches']['latest_item']
         if '\\u' in latest_item:  # and sys.version_info.major < 3:

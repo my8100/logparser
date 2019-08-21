@@ -59,6 +59,41 @@ TELNET_160_PORT_16024 = u"""2019-06-15 11:53:00 [scrapy.utils.log] INFO: Scrapy 
 2019-06-15 11:53:02 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
 """
 
+LATEST_SCRAPE_ITEM_ONE_LINE = u"""2019-01-01 00:00:01 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>
+{'item': 1}
+"""
+
+LATEST_SCRAPE_ITEM_MULTIPLE_LINES = u"""2019-01-01 00:00:02 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>
+{
+    'item': 2
+}
+"""
+
+LATEST_SCRAPE_ITEM_MIXED = u"""2019-01-01 00:00:01 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>
+{'item': 1}
+2019-01-01 00:00:03 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>
+{
+    'item': {
+        u'Chinese \u6c49\u5b57': 3
+    }
+}
+2019-01-01 00:00:04 [scrapy_fieldstats.fieldstats] INFO: Field stats:
+{'item': '100%'}
+2019-01-01 00:00:04 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
+"""
+
+SCRAPY_FIELDSTATS = u"""2019-01-01 00:00:01 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
+{'dupefilter/filtered': 1,
+ 'fields_coverage': {
+                        u'Chinese \u6c49\u5b57': '50%',
+                        'author': {
+                            'a': 1,
+                            'b': 2
+                        }
+                    },
+ 'finish_reason': 'finished'}
+"""
+
 FRONT = u"""2018-10-23 18:28:34 [scrapy.utils.log] INFO: Scrapy 1.5.1 started (bot: demo)
 2018-10-23 18:28:34 [scrapy.utils.log] INFO: Versions: lxml 4.2.1.0, libxml2 2.9.7, cssselect 1.0.3, parsel 1.4.0, w3lib 1.19.0, Twisted 17.5.0, Python 3.6.5 |Anaconda, Inc.| (default, Mar 29 2018, 13:32:41) [MSC v.1900 64 bit (AMD64)], pyOpenSSL 17.5.0 (OpenSSL 1.0.2o  27 Mar 2018), cryptography 2.2.1, Platform Windows-7-6.1.7601-SP1
 2018-10-23 18:28:34 [scrapy.crawler] INFO: Overridden settings: {'BOT_NAME': 'demo', 'CONCURRENT_REQUESTS': 2, 'COOKIES_ENABLED': False, 'DOWNLOAD_DELAY': 1, 'FEED_URI': 'file:///C:/Users/win7/items/demo/test/2018-10-23_182826.jl', 'LOGSTATS_INTERVAL': 1, 'LOG_FILE': 'logs/demo/test/2018-10-23_182826.log', 'NEWSPIDER_MODULE': 'demo.spiders', 'SPIDER_MODULES': ['demo.spiders'], 'USER_AGENT': 'Mozilla/5.0'}

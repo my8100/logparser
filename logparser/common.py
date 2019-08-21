@@ -189,7 +189,8 @@ class Common(object):
         except ValueError as err:
             print(text)
             print(traceback.format_exc())
-            return dict(json_loads_error=err, stats=backup)
+            # str(err) to avoid TypeError: Object of type JSONDecodeError is not JSON serializable
+            return dict(json_loads_error=str(err), stats=backup)
 
     def update_data_with_crawler_stats(self, data, crawler_stats, update_log_count):
         # 'downloader/response_count': 4,

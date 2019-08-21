@@ -138,17 +138,20 @@ def test_telnet_info():
 def test_latest_scrape_item():
     data = parse(LATEST_SCRAPE_ITEM_ONE_LINE)
     d = data['latest_matches']
-    assert d['latest_scrape'] == '2019-01-01 00:00:01 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    latest_scrape = '2019-01-01 00:00:01 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    assert d['latest_scrape'] == latest_scrape
     assert d['latest_item'] == "{'item': 1}"
 
     data = parse(LATEST_SCRAPE_ITEM_MULTIPLE_LINES)
     d = data['latest_matches']
-    assert d['latest_scrape'] == '2019-01-01 00:00:02 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    latest_scrape = '2019-01-01 00:00:02 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    assert d['latest_scrape'] == latest_scrape
     assert json.loads(d['latest_item'].replace("'", '"')) == dict(item=2)
 
     data = parse(LATEST_SCRAPE_ITEM_MIXED)
     d = data['latest_matches']
-    assert d['latest_scrape'] == '2019-01-01 00:00:03 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    latest_scrape = '2019-01-01 00:00:03 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/get>'
+    assert d['latest_scrape'] == latest_scrape
     assert json.loads(d['latest_item'].replace("u'", "'").replace("'", '"')) == dict(item={u'Chinese 汉字': 3})
 
 

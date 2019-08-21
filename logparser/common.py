@@ -40,7 +40,7 @@ for k, v in LOG_CATEGORIES_PATTERN_DICT.items():
     p = re.compile(r"""\n
                     ({time_}[ ][^\n]+?{pattern}.*?)                                  # first line (and its details)
                     (?=\r?\n{time_}[ ][^\n]+?(?:DEBUG|INFO|WARNING|ERROR|CRITICAL))  # ?=: Would not consume strings
-                   """.format(time_=DATETIME_PATTERN, pattern=v), re.VERBOSE|re.DOTALL)
+                   """.format(time_=DATETIME_PATTERN, pattern=v), re.VERBOSE | re.DOTALL)
     LOG_CATEGORIES_PATTERN_DICT[k] = p
 _odict = OrderedDict()
 for k in ['critical_logs', 'error_logs', 'warning_logs', 'redirect_logs', 'retry_logs', 'ignore_logs']:
@@ -78,7 +78,7 @@ LATEST_SCRAPE_ITEM_PATTERN = re.compile(r"""\n
                                          ({time_}[ ][^\n]+?{pattern}[^\n]+?)\r?\n({{.*?)
                                          (?=\r?\n{time_}[ ][^\n]+?(?:DEBUG|INFO|WARNING|ERROR|CRITICAL))  # ?=:
                                          """.format(time_=DATETIME_PATTERN, pattern=r':[ ]Scraped[ ]from[ ]<'),
-                                         re.VERBOSE|re.DOTALL)
+                                         re.VERBOSE | re.DOTALL)
 
 # 2019-01-01 00:00:01 [scrapy.crawler] INFO: Received SIGTERM, shutting down gracefully. Send again to force
 # 2019-01-01 00:00:01 [scrapy.core.engine] INFO: Closing spider (shutdown)
@@ -126,7 +126,7 @@ PATTERN_LOG_ENDING = re.compile(r"""
                                 (%s)[ ][^\n]+?
                                 (Dumping[ ]Scrapy[ ]stats:.*?(\{.+\}).*?
                                 |INFO:[ ]Spider[ ]closed.*)
-                                """ % DATETIME_PATTERN, re.VERBOSE|re.DOTALL)
+                                """ % DATETIME_PATTERN, re.VERBOSE | re.DOTALL)
 
 
 class Common(object):

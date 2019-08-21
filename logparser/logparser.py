@@ -184,7 +184,7 @@ class LogParser(Common):
             half = max(1, int(lines_limit / 2))
             if len(lines) > lines_limit:
                 log = '\n'.join(lines[:half] + ['......'] + lines[-half:])
-        return u'\n{title}:\n{sign}\n{log}\n{sign}\n'.format(title=title, log=log, sign='='*150)
+        return u'\n{title}:\n{sign}\n{log}\n{sign}\n'.format(title=title, log=log, sign='=' * 150)
 
     def get_default_stats(self):
         last_update_timestamp = int(time.time())

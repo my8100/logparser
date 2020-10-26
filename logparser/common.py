@@ -83,7 +83,7 @@ LATEST_SCRAPE_ITEM_PATTERN = re.compile(r"""\n
 # 2019-01-01 00:00:01 [scrapy.crawler] INFO: Received SIGTERM, shutting down gracefully. Send again to force
 # 2019-01-01 00:00:01 [scrapy.core.engine] INFO: Closing spider (shutdown)
 # 2019-01-01 00:00:01 [scrapy.crawler] INFO: Received SIGTERM twice, forcing unclean shutdown
-SIGTERM_PATTERN = re.compile(r'^%s[ ].+?:[ ](Received[ ]SIGTERM([ ]twice)?),' % DATETIME_PATTERN)
+SIGTERM_PATTERN = re.compile(r'^%s[ ].+?:[ ](Received[ ]SIG(?:BREAK|INT|TERM)([ ]twice)?),' % DATETIME_PATTERN)
 
 # 'downloader/response_status_count/200': 2,
 # 200 301 302 401 403 404 500 503

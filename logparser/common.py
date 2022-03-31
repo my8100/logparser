@@ -185,17 +185,17 @@ class Common(object):
         text = re.sub(r"'(.+?)'", r'"\1"', text)
         text = re.sub(r'[bu]"(.+?)"', r'"\1"', text)
 
-        """ 
-            Infoprice 
+        """
+            Infoprice
             The 'spidermon' inserts information in python dict format, into the final scrapydweb log which generates an error in the json.loads() function.
             Changes made to attend the "crawlers" with lib Spidermon implemented.
         """
         bad_words = {
-            'None':  'null',
-            'True':  'true',
+            'None': 'null',
+            'True': 'true',
             'False': 'false'
         }
-        for word, word_replace  in bad_words.items():
+        for word, word_replace in bad_words.items():
             text = re.sub(word, word_replace, text)
 
         try:

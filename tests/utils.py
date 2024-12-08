@@ -154,7 +154,7 @@ class Constant(object):
     def timestamp_to_string(timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-    def sub_process(self, args, block=False, timeout=60):
+    def sub_process(self, args, block=False, timeout=120):
         proc = Popen(args.split())
         if block:
             # TODO: In PY2: TypeError: communicate() got an unexpected keyword argument 'timeout'

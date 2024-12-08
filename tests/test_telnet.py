@@ -18,15 +18,29 @@ def test_telnet(psr):
 
     cwd = os.getcwd()
     os.chdir(cst.DEMO_PROJECT_PATH)
+    print(os.getcwd())
+    # ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']
+    # Ref: https://github.com/scrapy/scrapy/issues/6024
+    # "We just released 2.10.1 with the Twisted version restricted as a workaround for this."
+    # Ref: https://github.com/scrapy/scrapy/pull/6064
+    # Fixes #6024
     try:
-        for version in ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']:
+        # scrapyd 1.4.3 requires scrapy>=2.0.0
+        cst.sub_process('pip uninstall -y scrapyd', block=True)
+        cst.sub_process('pip uninstall -y scrapy', block=True)
+        # ['2.0.0', '2.10.1', 'latest']:
+        for version in ['2.10.1', 'latest', '1.5.1']:
             if version == 'latest':
                 cmd = 'pip install --upgrade scrapy'
             else:
+                # cst.sub_process('pip uninstall -y Twisted', block=True)
+                if version < '2.10.1':
+                    cst.sub_process('pip install Twisted==20.3.0', block=True)
                 cmd = 'pip install scrapy==%s' % version
             cst.sub_process(cmd, block=True)
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
             cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
+            print(cmd)
             if version == '1.5.0':
                 cmd += ' -s TELNETCONSOLE_ENABLED=False'
             elif version == '1.5.2':
@@ -88,8 +102,11 @@ def test_disable_telnet(psr):
     cwd = os.getcwd()
     os.chdir(cst.DEMO_PROJECT_PATH)
     try:
-        version = '1.5.1' if (cst.ON_WINDOWS or on_fedora) else '1.6.0'
-        cmd = 'pip install scrapy==%s' % version
+        if (cst.ON_WINDOWS or on_fedora):
+            cmd = 'pip install scrapy==%s' % '1.5.1'
+        else:
+            cmd = 'pip install --upgrade scrapy'
+        print(cmd)
         cst.sub_process(cmd, block=True)
         for name in ['enable_telnet', 'disable_telnet']:
             enable_telnet = name == 'enable_telnet'

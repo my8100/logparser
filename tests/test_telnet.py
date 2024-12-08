@@ -103,8 +103,10 @@ def test_disable_telnet(psr):
     os.chdir(cst.DEMO_PROJECT_PATH)
     try:
         if (cst.ON_WINDOWS or on_fedora):
-            cmd = 'pip install scrapy==%s' % '1.5.1'
+            version = '1.5.1'
+            cmd = 'pip install scrapy==%s' % version
         else:
+            version = None
             cmd = 'pip install --upgrade scrapy'
         print(cmd)
         cst.sub_process(cmd, block=True)
@@ -138,7 +140,8 @@ def test_disable_telnet(psr):
             time.sleep(30)
             parser.main()
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-            assert log_data['latest_matches']['scrapy_version'] == version
+            if version:
+                assert log_data['latest_matches']['scrapy_version'] == version
             assert log_data['latest_matches']['telnet_console']
             assert log_data['crawler_stats']['source'] == 'log'
             if enable_telnet:

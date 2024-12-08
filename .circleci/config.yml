@@ -1,29 +1,22 @@
 # Python CircleCI 2.1 configuration file
 version: 2.1
-
 orbs:
   codecov: codecov/codecov@1.0.2
-
 jobs:
   py39: &test-template
     docker:
       - image: cimg/python:3.9
-
     working_directory: ~/repo
-
     parameters:
       is-py27:
         type: boolean
         default: false
-
     steps:
       - run:
           name: Install telnet
           command: |
             sudo apt-get update && sudo apt-get install telnet
-
       - checkout
-
       - when:
           condition: <<parameters.is-py27>>
           steps:
@@ -38,7 +31,6 @@ jobs:
                 name: Create virtual env in PY3
                 command: |
                   python3 -m venv venv
-
       - run:
           name: Install dependencies
           command: |
@@ -49,7 +41,6 @@ jobs:
             python --version
             pip install -r requirements.txt
             pip install -r requirements-tests.txt
-
       - run:
           name: Run tests
           command: |
@@ -73,7 +64,6 @@ jobs:
           path: coverage.xml
       - codecov/upload:
           file: coverage.xml
-
   py27:
     <<: *test-template
     docker:
@@ -94,11 +84,10 @@ jobs:
     <<: *test-template
     docker:
       - image: cimg/python:3.12
-  py312:
+  py313:
     <<: *test-template
     docker:
       - image: cimg/python:3.13      
-
 workflows:
   test:
     jobs:

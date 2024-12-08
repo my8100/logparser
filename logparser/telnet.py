@@ -148,6 +148,8 @@ class MyTelnet(Common):
                     result[k] = True
                 elif v == 'False':
                     result[k] = False
+                elif v == 'None':
+                    result[k] = None
                 else:
                     try:
                         result[k] = int(float(v))

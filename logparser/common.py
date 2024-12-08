@@ -179,11 +179,14 @@ class Common(object):
             # self.crawler.stats.inc_value(
                 # 'crawlera/response/error/%s' % crawlera_error.decode('utf8'))
         # u"crawlera/response/error/timeout": 1
+        # 'items_per_minute': None,
+        # 'responses_per_minute': None,
         backup = text
         text = re.sub(r'(datetime.datetime\(.+?\))', r'"\1"', text)
         text = re.sub(r'(".*?)\'(.*?)\'(.*?")', r'\1_\2_\3', text)
         text = re.sub(r"'(.+?)'", r'"\1"', text)
         text = re.sub(r'[bu]"(.+?)"', r'"\1"', text)
+        text = re.sub(r': None([,}])', r': null\1', text)
         try:
             return json.loads(text)
         except ValueError as err:

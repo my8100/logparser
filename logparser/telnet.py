@@ -196,7 +196,8 @@ class MyTelnet(Common):
             self.tn.sendline(self.telnet_password)
             self.tn.expect(u'>>>', timeout=TELNET_TIMEOUT)
         except Exception as err:
-            self.logger.warning("Found error in pexpect_io: %s" % err)
+            self.logger.warning("Found error in pexpect_io %s %s: %s" % (self.telnet_username, self.telnet_password, err))
+            raise err
 
         self.tn.sendline(bytes_to_str(TELNETCONSOLE_COMMAND_MAP['log_file']))
         self.tn.expect(re.compile(r'[\'"].+>>>', re.S), timeout=TELNET_TIMEOUT)

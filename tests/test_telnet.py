@@ -139,6 +139,7 @@ def test_disable_telnet(psr):
                 last_update_timestamp = log_data['crawler_stats']['last_update_timestamp']
                 assert last_update_timestamp
                 runtime = log_data['crawler_engine']['time()-engine.start_time']
+                print('runtime: %s' % runtime)
                 assert runtime
             time.sleep(10)
             parser.main()
@@ -147,7 +148,9 @@ def test_disable_telnet(psr):
                 log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
                 print('log_data: %s' % log_data)
                 assert log_data['crawler_stats']['last_update_timestamp'] > last_update_timestamp
-                assert log_data['crawler_engine']['time()-engine.start_time'] > runtime
+                runtime_new = log_data['crawler_engine']['time()-engine.start_time']
+                print('runtime_new: %s' % runtime_new)
+                assert runtime_new > runtime
             time.sleep(30)
             parser.main()
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))

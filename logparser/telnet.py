@@ -5,7 +5,11 @@ import os
 import platform
 import re
 import sys
-from telnetlib import DO, DONT, IAC, SB, SE, Telnet, TTYPE, WILL, WONT
+# DeprecationWarning: 'telnetlib' is deprecated and slated for removal in Python 3.13
+try:
+    import telnetlib
+except ImportError:
+    telnetlib = None
 import traceback
 
 import pexpect
@@ -95,7 +99,7 @@ class MyTelnet(Common):
         self.host = self.OVERRIDE_TELNET_CONSOLE_HOST or self.host
 
         self.logger.debug("Try to telnet to %s:%s for %s", self.host, self.port, self.data['log_path'])
-        if self.telnet_password:
+        if self.telnet_password or telnetlib is None:
             self.setup_pexpect()
             if self.tn is not None:
                 self.pexpect_io()
@@ -117,16 +121,16 @@ class MyTelnet(Common):
 
     @staticmethod
     def telnet_callback(tn, command, option):
-        if command == DO and option == TTYPE:
-            tn.sendall(IAC + WILL + TTYPE)
-            tn.sendall(IAC + SB + TTYPE + '\0' + 'LogParser' + IAC + SE)
-        elif command in (DO, DONT):
-            tn.sendall(IAC + WILL + option)
-        elif command in (WILL, WONT):
-            tn.sendall(IAC + DO + option)
+        if command == telnetlib.DO and option == telnetlib.TTYPE:
+            tn.sendall(telnetlib.IAC + telnetlib.WILL + telnetlib.TTYPE)
+            tn.sendall(telnetlib.IAC + telnetlib.SB + telnetlib.TTYPE + '\0' + 'LogParser' + telnetlib.IAC + telnetlib.SE)
+        elif command in (telnetlib.DO, telnetlib.DONT):
+            tn.sendall(telnetlib.IAC + telnetlib.WILL + option)
+        elif command in (telnetlib.WILL, telnetlib.WONT):
+            tn.sendall(telnetlib.IAC + telnetlib.DO + option)
 
     def setup_telnet(self):
-        self.tn = Telnet(self.host, int(self.port), timeout=TELNET_TIMEOUT)
+        self.tn = telnetlib.Telnet(self.host, int(self.port), timeout=TELNET_TIMEOUT)
         # [twisted] CRITICAL: Unhandled Error
         # Failure: twisted.conch.telnet.OptionRefused: twisted.conch.telnet.OptionRefused
         # https://github.com/jookies/jasmin-web/issues/2
@@ -167,11 +171,14 @@ class MyTelnet(Common):
             return src.decode('utf-8')
         # TypeError: got <type 'str'> ('Username: ') as pattern,
         # must be one of: <type 'unicode'>, pexpect.EOF, pexpect.TIMEOUT
-        self.tn.expect(u'Username: ', timeout=TELNET_TIMEOUT)
-        self.tn.sendline(self.telnet_username)
-        self.tn.expect(u'Password: ', timeout=TELNET_TIMEOUT)
-        self.tn.sendline(self.telnet_password)
-        self.tn.expect(u'>>>', timeout=TELNET_TIMEOUT)
+        try:
+            self.tn.expect(u'Username: ', timeout=TELNET_TIMEOUT)
+            self.tn.sendline(self.telnet_username)
+            self.tn.expect(u'Password: ', timeout=TELNET_TIMEOUT)
+            self.tn.sendline(self.telnet_password)
+            self.tn.expect(u'>>>', timeout=TELNET_TIMEOUT)
+        except Exception as err:
+            self.logger.warning("Found error in pexpect_io: %s" % err)
 
         self.tn.sendline(bytes_to_str(TELNETCONSOLE_COMMAND_MAP['log_file']))
         self.tn.expect(re.compile(r'[\'"].+>>>', re.S), timeout=TELNET_TIMEOUT)

@@ -20,6 +20,7 @@ else:
 class Constant(object):
     ON_WINDOWS = platform.system() == 'Windows'
     PY2 = sys.version_info.major < 3
+    PY313 = sys.version_info.major == 3 and sys.version_info.minor == 13
 
     NA = 'N/A'
     LOGPARSER_VERSION = __version__

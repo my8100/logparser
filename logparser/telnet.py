@@ -4,6 +4,7 @@ import logging
 import os
 import platform
 import re
+from subprocess import Popen, PIPE
 import sys
 # DeprecationWarning: 'telnetlib' is deprecated and slated for removal in Python 3.13
 try:
@@ -56,6 +57,20 @@ class MyTelnet(Common):
         self.crawler_stats = {}
         self.crawler_engine = {}
 
+    def _exec_cmd(self, cmd):
+        self.logger.debug("_exec_cmd: %s" % cmd)
+        # os.system(cmd)
+        try:
+            p = Popen(cmd.strip(), stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+            output, err = p.communicate(timeout=30)
+            rc = p.returncode
+            output = output.decode('utf-8')
+            err = err.decode('utf-8')
+        except Exception as err:
+            self.logger.warning("Fail to exec cmd '%s': err %s" % (cmd, err))
+        else:
+            self.logger.info("Got result of cmd '%s': rc %s, err %s, output:\n%s" % (cmd, rc, err, output))
+
     def main(self):
         try:
             self.run()
@@ -69,6 +84,7 @@ class MyTelnet(Common):
                               self.host, self.port, self.data['log_path'], self.scrapy_version, err)
             if self.verbose:
                 self.logger.error(traceback.format_exc())
+            self._exec_cmd("telnet %s %s" % (self.host, self.port))
         finally:
             if self.tn is not None:
                 try:

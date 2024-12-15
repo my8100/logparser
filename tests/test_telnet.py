@@ -67,7 +67,7 @@ def test_telnet(psr):
                 assert not log_data['latest_matches']['telnet_console']
             else:
                 assert log_data['latest_matches']['telnet_console']
-            if version <= '1.5.1':
+            if version == '2.10.1':
                 assert not log_data['latest_matches']['telnet_username']
                 assert not log_data['latest_matches']['telnet_password']
             elif version == '2.12.0':

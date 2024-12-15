@@ -30,7 +30,10 @@ def test_telnet(psr):
         # scrapyd 1.4.3 requires scrapy>=2.0.0
         cst.sub_process('pip uninstall -y scrapyd', block=True)
         cst.sub_process('pip uninstall -y scrapy', block=True)
-        for version in ['latest', '2.10.1', '2.12.0']:
+        # py3.13 + scrapy 2.10.1: No module named 'cgi'
+        # scrapy 2.12.0 Requires-Python >=3.9, the final version for py3.8 is 2.11.2
+        # history: 2.10.1, 2.11.0, 2.11.1, 2.11.2, 2.12.0
+        for version in ['latest', '2.11.0', '2.11.1']:
             if version == 'latest':
                 pip_cmd = 'pip install --upgrade scrapy'
             else:
@@ -41,9 +44,9 @@ def test_telnet(psr):
             cst.sub_process(pip_cmd, block=True)
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
             scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
-            if version == '2.10.1':
+            if version == '2.11.0':
                 scrapy_cmd += ' -s TELNETCONSOLE_ENABLED=False'
-            elif version == '2.12.0':
+            elif version == '2.11.1':
                 scrapy_cmd += ' -s TELNETCONSOLE_USERNAME=usr123 -s TELNETCONSOLE_PASSWORD=psw456'
             proc = cst.sub_process(scrapy_cmd)
 
@@ -63,14 +66,14 @@ def test_telnet(psr):
                 assert log_data['latest_matches']['scrapy_version'] == version
             assert log_data['log_categories']['critical_logs']['count'] == 0
             assert log_data['log_categories']['error_logs']['count'] == 0
-            if version == '2.10.1':
+            if version == '2.11.0':
                 assert not log_data['latest_matches']['telnet_console']
             else:
                 assert log_data['latest_matches']['telnet_console']
-            if version == '2.10.1':
+            if version == '2.11.0':
                 assert not log_data['latest_matches']['telnet_username']
                 assert not log_data['latest_matches']['telnet_password']
-            elif version == '2.12.0':
+            elif version == '2.11.1':
                 assert log_data['latest_matches']['telnet_username'] == 'usr123'
                 assert log_data['latest_matches']['telnet_password'] == 'psw456'
             else:
@@ -84,7 +87,7 @@ def test_telnet(psr):
                 assert log_data['finish_reason'] == 'closespider_timeout'
                 assert log_data['crawler_stats']
                 assert log_data['crawler_stats']['source'] == 'log'
-                if version == '2.10.1' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
+                if version == '2.11.0' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
                     assert not log_data['crawler_engine']
                 else:
                     assert log_data['crawler_engine']

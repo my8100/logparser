@@ -54,9 +54,9 @@ LATEST_MATCHES_PATTERN_DICT = dict(
     scrapy_version=r'Scrapy[ ]\d+\.\d+\.\d+[ ]started',    # Scrapy 1.5.1 started (bot: demo)
     telnet_console=r'Telnet[ ]console[ ]listening[ ]on',   # Telnet console listening on 127.0.0.1:6023
     # Default: 'scrapy' | Overridden settings: {'TELNETCONSOLE_USERNAME': 'usr'}
-    telnet_username=r'Overridden[ ]settings:.+TELNETCONSOLE_USERNAME',
+    telnet_username=r'TELNETCONSOLE_USERNAME\W:.+',
     # Telnet Password: 865bba341ef25552 | Overridden settings: {'TELNETCONSOLE_PASSWORD': 'psw'}
-    telnet_password=r'Overridden[ ]settings:.+TELNETCONSOLE_PASSWORD|Telnet[ ]Password:[ ].+',
+    telnet_password=r'TELNETCONSOLE_PASSWORD\W:.+|Telnet[ ]Password:[ ].+',
     resuming_crawl=r'Resuming[ ]crawl',          # Resuming crawl (675840 requests scheduled)
     latest_offsite=r'Filtered[ ]offsite',        # Filtered offsite request to 'www.baidu.com'
     latest_duplicate=r'Filtered[ ]duplicate',    # Filtered duplicate request: <GET http://httpbin.org/headers>
@@ -71,7 +71,8 @@ for k in ['scrapy_version', 'telnet_console', 'telnet_username', 'telnet_passwor
     _odict.update({k: LATEST_MATCHES_PATTERN_DICT[k]})
 LATEST_MATCHES_PATTERN_DICT = _odict
 for k, v in LATEST_MATCHES_PATTERN_DICT.items():
-    LATEST_MATCHES_PATTERN_DICT[k] = r'^%s[ ].+?%s' % (DATETIME_PATTERN, v)
+    if k not in ['telnet_username', 'telnet_password']:
+        LATEST_MATCHES_PATTERN_DICT[k] = r'^%s[ ].+?%s' % (DATETIME_PATTERN, v)
 
 # 2019-01-01 00:00:01 [scrapy.core.scraper] DEBUG: Scraped from <200 http://httpbin.org/headers>
 LATEST_SCRAPE_ITEM_PATTERN = re.compile(r"""\n

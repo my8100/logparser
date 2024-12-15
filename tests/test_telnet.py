@@ -35,8 +35,8 @@ def test_telnet(psr):
         # history: 2.10.1, 2.11.0, 2.11.1, 2.11.2, 2.12.0
         test_type_to_version = dict(
             latest='latest',
-            no_telnet='2.11.0',
             account='2.11.1',
+            no_telnet='2.11.0',
         )
         if cst.PY313:
             # TODO: update version
@@ -49,13 +49,19 @@ def test_telnet(psr):
                 if version < '2.10.1':
                     cst.sub_process('pip install Twisted==20.3.0', block=True)
                 pip_cmd = 'pip install scrapy==%s' % version
-            cst.sub_process(pip_cmd, block=True)
+
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
             scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
             if test_type == 'no_telnet':
                 scrapy_cmd += ' -s TELNETCONSOLE_ENABLED=False'
             elif test_type == 'account':
                 scrapy_cmd += ' -s TELNETCONSOLE_USERNAME=usr123 -s TELNETCONSOLE_PASSWORD=psw456'
+
+            print('test_type:', test_type)
+            print('version:', version)
+            print('pip_cmd:', pip_cmd)
+            print('scrapy_cmd:', scrapy_cmd)
+            cst.sub_process(pip_cmd, block=True)
             proc = cst.sub_process(scrapy_cmd)
 
             time.sleep(10)

@@ -63,6 +63,7 @@ def test_telnet(psr):
             parser.main()
 
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
+            print('log_data: %s' % log_data)
             if version == 'latest':
                 assert log_data['latest_matches']['scrapy_version'] >= '1.6.0'
             else:
@@ -96,7 +97,9 @@ def test_telnet(psr):
                     assert log_data['crawler_engine']
                     assert log_data['crawler_engine']['source'] == 'telnet'
     except Exception as err:
-        if not cst.PY2:
+        if cst.PY2:
+            print("Found error in test: %s" % err)
+        else:
             raise err
     finally:
         os.chdir(cwd)
@@ -132,6 +135,7 @@ def test_disable_telnet(psr):
             parser.main()
             if enable_telnet:
                 log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
+                print('log_data: %s' % log_data)
                 last_update_timestamp = log_data['crawler_stats']['last_update_timestamp']
                 assert last_update_timestamp
                 runtime = log_data['crawler_engine']['time()-engine.start_time']
@@ -141,11 +145,13 @@ def test_disable_telnet(psr):
             # Issue #4: Stats collected via telnet are not being updated periodically
             if enable_telnet:
                 log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
+                print('log_data: %s' % log_data)
                 assert log_data['crawler_stats']['last_update_timestamp'] > last_update_timestamp
                 assert log_data['crawler_engine']['time()-engine.start_time'] > runtime
             time.sleep(30)
             parser.main()
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
+            print('log_data: %s' % log_data)
             if version:
                 assert log_data['latest_matches']['scrapy_version'] == version
             assert log_data['latest_matches']['telnet_console']
@@ -155,7 +161,9 @@ def test_disable_telnet(psr):
             else:
                 assert not log_data['crawler_engine']
     except Exception as err:
-        if not cst.PY2:
+        if cst.PY2:
+            print("Found error in test: %s" % err)
+        else:
             raise err
     finally:
         os.chdir(cwd)
@@ -168,6 +176,7 @@ def test_telnet_fail(psr):
         cst.write_text(log_file, globals()[name.upper()])
         parser.main()
         log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
+        print('log_data: %s' % log_data)
         if name == 'telnet_151_port_16023':
             assert log_data['latest_matches']['scrapy_version'] == '1.5.1'
             assert log_data['latest_matches']['telnet_console'] == '127.0.0.1:16023'

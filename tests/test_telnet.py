@@ -17,6 +17,7 @@ def test_telnet(psr):
     parser = psr(execute_main=False)
 
     cwd = os.getcwd()
+    print(cwd)
     os.chdir(cst.DEMO_PROJECT_PATH)
     print(os.getcwd())
     # ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']
@@ -28,24 +29,24 @@ def test_telnet(psr):
         # scrapyd 1.4.3 requires scrapy>=2.0.0
         cst.sub_process('pip uninstall -y scrapyd', block=True)
         cst.sub_process('pip uninstall -y scrapy', block=True)
-        # ['2.0.0', '2.10.1', 'latest']:
-        for version in ['2.10.1', 'latest', '1.5.1']:
+        # ['2.0.0', '2.10.1', 'latest']
+        # ['2.10.1', 'latest', '1.5.1']
+        for version in ['latest', '2.10.1']:
             if version == 'latest':
-                cmd = 'pip install --upgrade scrapy'
+                pip_cmd = 'pip install --upgrade scrapy'
             else:
                 # cst.sub_process('pip uninstall -y Twisted', block=True)
                 if version < '2.10.1':
                     cst.sub_process('pip install Twisted==20.3.0', block=True)
-                cmd = 'pip install scrapy==%s' % version
-            cst.sub_process(cmd, block=True)
+                pip_cmd = 'pip install scrapy==%s' % version
+            cst.sub_process(pip_cmd, block=True)
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
-            cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
-            print(cmd)
+            scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
             if version == '1.5.0':
-                cmd += ' -s TELNETCONSOLE_ENABLED=False'
+                scrapy_cmd += ' -s TELNETCONSOLE_ENABLED=False'
             elif version == '1.5.2':
-                cmd += ' -s TELNETCONSOLE_USERNAME=usr123 -s TELNETCONSOLE_PASSWORD=psw456'
-            proc = cst.sub_process(cmd)
+                scrapy_cmd += ' -s TELNETCONSOLE_USERNAME=usr123 -s TELNETCONSOLE_PASSWORD=psw456'
+            proc = cst.sub_process(scrapy_cmd)
 
             time.sleep(10)
             if version == '1.4.0':
@@ -102,14 +103,13 @@ def test_disable_telnet(psr):
     cwd = os.getcwd()
     os.chdir(cst.DEMO_PROJECT_PATH)
     try:
-        if (cst.ON_WINDOWS or on_fedora):
+        if cst.ON_WINDOWS or on_fedora:
             version = '1.5.1'
-            cmd = 'pip install scrapy==%s' % version
+            pip_cmd = 'pip install scrapy==%s' % version
         else:
             version = None
-            cmd = 'pip install --upgrade scrapy'
-        print(cmd)
-        cst.sub_process(cmd, block=True)
+            pip_cmd = 'pip install --upgrade scrapy'
+        cst.sub_process(pip_cmd, block=True)
         for name in ['enable_telnet', 'disable_telnet']:
             enable_telnet = name == 'enable_telnet'
             parser = psr(execute_main=False, enable_telnet=enable_telnet)
@@ -120,8 +120,8 @@ def test_disable_telnet(psr):
                     cst.write_text(_log_file, TELNET_151_PORT_16023.replace(':16023', ':%s' % _name))
 
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, '%s.log' % name)
-            cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=40 -s LOG_FILE=%s' % log_file
-            cst.sub_process(cmd)
+            scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=40 -s LOG_FILE=%s' % log_file
+            cst.sub_process(scrapy_cmd)
             time.sleep(10)
             parser.main()
             if enable_telnet:

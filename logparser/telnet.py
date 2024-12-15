@@ -58,7 +58,7 @@ class MyTelnet(Common):
         self.crawler_engine = {}
 
     def _exec_cmd(self, cmd):
-        self.logger.debug("_exec_cmd: %s" % cmd)
+        self.logger.info("_exec_cmd: %s" % cmd)
         # os.system(cmd)
         try:
             p = Popen(cmd.strip(), stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
@@ -127,6 +127,7 @@ class MyTelnet(Common):
     def setup_pexpect(self):
         # Cannot catch error directly here, see main()
         self.tn = pexpect.spawn('telnet %s %s' % (self.host, self.port), encoding='utf-8', timeout=TELNET_TIMEOUT)
+        self.logger.info('setup_pexpect %s' % self.tn)
         # logfile: <open file '<stdout>', mode 'w' at 0x7fe160149150>
         # logfile_read: None
         # logfile_send: None
@@ -147,6 +148,7 @@ class MyTelnet(Common):
 
     def setup_telnet(self):
         self.tn = telnetlib.Telnet(self.host, int(self.port), timeout=TELNET_TIMEOUT)
+        self.logger.info('setup_telnet %s' % self.tn)
         # [twisted] CRITICAL: Unhandled Error
         # Failure: twisted.conch.telnet.OptionRefused: twisted.conch.telnet.OptionRefused
         # https://github.com/jookies/jasmin-web/issues/2

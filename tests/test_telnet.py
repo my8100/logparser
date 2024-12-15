@@ -33,13 +33,18 @@ def test_telnet(psr):
         cst.sub_process('pip uninstall -y scrapy', block=True)
         # scrapy 2.12.0: Dropped support for Python 3.8, added support for Python 3.13
         # history: 2.10.1, 2.11.0, 2.11.1, 2.11.2, 2.12.0
-        for version in ['latest', '2.11.0', '2.11.1']:
+        test_type_to_version = dict(
+            latest='latest',
+            no_telnet='2.11.0',
+            account='2.11.1',
+        )
+        if cst.PY313:
+            # TODO: update version
+            test_type_to_version.update(no_telnet='latest', account='latest')
+        for test_type, version in test_type_to_version.items():
             if version == 'latest':
                 pip_cmd = 'pip install --upgrade scrapy'
             else:
-                if cst.PY313:
-                    # TODO: update version list
-                    continue
                 # cst.sub_process('pip uninstall -y Twisted', block=True)
                 if version < '2.10.1':
                     cst.sub_process('pip install Twisted==20.3.0', block=True)
@@ -47,9 +52,9 @@ def test_telnet(psr):
             cst.sub_process(pip_cmd, block=True)
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
             scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
-            if version == '2.11.0':
+            if test_type == 'no_telnet':
                 scrapy_cmd += ' -s TELNETCONSOLE_ENABLED=False'
-            elif version == '2.11.1':
+            elif test_type == 'account':
                 scrapy_cmd += ' -s TELNETCONSOLE_USERNAME=usr123 -s TELNETCONSOLE_PASSWORD=psw456'
             proc = cst.sub_process(scrapy_cmd)
 
@@ -64,25 +69,30 @@ def test_telnet(psr):
 
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
             print('log_data: %s' % log_data)
+
             if version == 'latest':
                 assert log_data['latest_matches']['scrapy_version'] >= '1.6.0'
             else:
                 assert log_data['latest_matches']['scrapy_version'] == version
+
             assert log_data['log_categories']['critical_logs']['count'] == 0
             assert log_data['log_categories']['error_logs']['count'] == 0
-            if version == '2.11.0':
+
+            if test_type == 'no_telnet':
                 assert not log_data['latest_matches']['telnet_console']
             else:
                 assert log_data['latest_matches']['telnet_console']
-            if version == '2.11.0':
+
+            if test_type == 'no_telnet':
                 assert not log_data['latest_matches']['telnet_username']
                 assert not log_data['latest_matches']['telnet_password']
-            elif version == '2.11.1':
+            elif test_type == 'account':
                 assert log_data['latest_matches']['telnet_username'] == 'usr123'
                 assert log_data['latest_matches']['telnet_password'] == 'psw456'
             else:
                 assert not log_data['latest_matches']['telnet_username']
                 assert log_data['latest_matches']['telnet_password']
+
             if version == '1.4.0':
                 assert log_data['finish_reason'] == 'N/A'
                 assert not log_data['crawler_stats']
@@ -91,7 +101,7 @@ def test_telnet(psr):
                 assert log_data['finish_reason'] == 'closespider_timeout'
                 assert log_data['crawler_stats']
                 assert log_data['crawler_stats']['source'] == 'log'
-                if version == '2.11.0' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
+                if test_type == 'no_telnet' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
                     assert not log_data['crawler_engine']
                 else:
                     assert log_data['crawler_engine']
@@ -139,7 +149,7 @@ def test_disable_telnet(psr):
                 last_update_timestamp = log_data['crawler_stats']['last_update_timestamp']
                 assert last_update_timestamp
                 runtime = log_data['crawler_engine']['time()-engine.start_time']
-                print('runtime: %s' % runtime)
+                print(time.ctime(), 'runtime: %s' % runtime)
                 assert runtime
             time.sleep(10)
             parser.main()
@@ -149,7 +159,7 @@ def test_disable_telnet(psr):
                 print('log_data: %s' % log_data)
                 assert log_data['crawler_stats']['last_update_timestamp'] > last_update_timestamp
                 runtime_new = log_data['crawler_engine']['time()-engine.start_time']
-                print('runtime_new: %s' % runtime_new)
+                print(time.ctime(), 'runtime_new: %s' % runtime_new)
                 assert runtime_new > runtime
             time.sleep(30)
             parser.main()

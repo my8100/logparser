@@ -156,7 +156,7 @@ class Constant(object):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
     def sub_process(self, cmd, block=False, timeout=120):
-        print(cmd)
+        print(time.ctime(), cmd)
         args = cmd.split()
         proc = Popen(args)
         if block:

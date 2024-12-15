@@ -14,6 +14,7 @@ on_fedora = 'fedora' in platform.platform()
 
 
 def test_telnet(psr):
+    # https://docs.scrapy.org/en/latest/topics/telnetconsole.html
     parser = psr(execute_main=False)
 
     cwd = os.getcwd()
@@ -29,9 +30,7 @@ def test_telnet(psr):
         # scrapyd 1.4.3 requires scrapy>=2.0.0
         cst.sub_process('pip uninstall -y scrapyd', block=True)
         cst.sub_process('pip uninstall -y scrapy', block=True)
-        # ['2.0.0', '2.10.1', 'latest']
-        # ['2.10.1', 'latest', '1.5.1']
-        for version in ['latest', '2.10.1']:
+        for version in ['latest', '2.10.1', '2.12.0']:
             if version == 'latest':
                 pip_cmd = 'pip install --upgrade scrapy'
             else:
@@ -42,9 +41,9 @@ def test_telnet(psr):
             cst.sub_process(pip_cmd, block=True)
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
             scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
-            if version == '1.5.0':
+            if version == '2.10.1':
                 scrapy_cmd += ' -s TELNETCONSOLE_ENABLED=False'
-            elif version == '1.5.2':
+            elif version == '2.12.0':
                 scrapy_cmd += ' -s TELNETCONSOLE_USERNAME=usr123 -s TELNETCONSOLE_PASSWORD=psw456'
             proc = cst.sub_process(scrapy_cmd)
 
@@ -64,14 +63,14 @@ def test_telnet(psr):
                 assert log_data['latest_matches']['scrapy_version'] == version
             assert log_data['log_categories']['critical_logs']['count'] == 0
             assert log_data['log_categories']['error_logs']['count'] == 0
-            if version == '1.5.0':
+            if version == '2.10.1':
                 assert not log_data['latest_matches']['telnet_console']
             else:
                 assert log_data['latest_matches']['telnet_console']
             if version <= '1.5.1':
                 assert not log_data['latest_matches']['telnet_username']
                 assert not log_data['latest_matches']['telnet_password']
-            elif version == '1.5.2':
+            elif version == '2.12.0':
                 assert log_data['latest_matches']['telnet_username'] == 'usr123'
                 assert log_data['latest_matches']['telnet_password'] == 'psw456'
             else:
@@ -85,7 +84,7 @@ def test_telnet(psr):
                 assert log_data['finish_reason'] == 'closespider_timeout'
                 assert log_data['crawler_stats']
                 assert log_data['crawler_stats']['source'] == 'log'
-                if version == '1.5.0' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
+                if version == '2.10.1' or ((cst.ON_WINDOWS or on_fedora) and version > '1.5.1'):
                     assert not log_data['crawler_engine']
                 else:
                     assert log_data['crawler_engine']
@@ -103,12 +102,12 @@ def test_disable_telnet(psr):
     cwd = os.getcwd()
     os.chdir(cst.DEMO_PROJECT_PATH)
     try:
-        if cst.ON_WINDOWS or on_fedora:
-            version = '1.5.1'
-            pip_cmd = 'pip install scrapy==%s' % version
-        else:
-            version = None
-            pip_cmd = 'pip install --upgrade scrapy'
+        # if cst.ON_WINDOWS or on_fedora:
+        #     version = '1.5.1'
+        #     pip_cmd = 'pip install scrapy==%s' % version
+        # else:
+        version = None
+        pip_cmd = 'pip install --upgrade scrapy'
         cst.sub_process(pip_cmd, block=True)
         for name in ['enable_telnet', 'disable_telnet']:
             enable_telnet = name == 'enable_telnet'

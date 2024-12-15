@@ -35,8 +35,8 @@ def test_telnet(psr):
         # history: 2.10.1, 2.11.0, 2.11.1, 2.11.2, 2.12.0
         test_type_to_version = dict(
             latest='latest',
-            account='2.11.1',
             no_telnet='2.11.0',
+            account='2.11.1',
         )
         if cst.PY313:
             # TODO: update version
@@ -50,7 +50,7 @@ def test_telnet(psr):
                     cst.sub_process('pip install Twisted==20.3.0', block=True)
                 pip_cmd = 'pip install scrapy==%s' % version
 
-            log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s.log' % version)
+            log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, 'scrapy_%s_%s.log' % (version, test_type))
             scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=20 -s LOG_FILE=%s' % log_file
             if test_type == 'no_telnet':
                 scrapy_cmd += ' -s TELNETCONSOLE_ENABLED=False'
@@ -74,7 +74,7 @@ def test_telnet(psr):
             parser.main()
 
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-            print('log_data: %s' % log_data)
+            print('%s log_data: %s' % (test_type, log_data))
 
             if version == 'latest':
                 assert log_data['latest_matches']['scrapy_version'] >= '1.6.0'
@@ -151,7 +151,7 @@ def test_disable_telnet(psr):
             parser.main()
             if enable_telnet:
                 log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-                print('log_data: %s' % log_data)
+                print('enable_telnet log_data: %s' % log_data)
                 last_update_timestamp = log_data['crawler_stats']['last_update_timestamp']
                 assert last_update_timestamp
                 runtime = log_data['crawler_engine']['time()-engine.start_time']
@@ -162,7 +162,7 @@ def test_disable_telnet(psr):
             # Issue #4: Stats collected via telnet are not being updated periodically
             if enable_telnet:
                 log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-                print('log_data: %s' % log_data)
+                print('enable_telnet log_data: %s' % log_data)
                 assert log_data['crawler_stats']['last_update_timestamp'] > last_update_timestamp
                 runtime_new = log_data['crawler_engine']['time()-engine.start_time']
                 print(time.ctime(), 'runtime_new: %s' % runtime_new)
@@ -170,7 +170,7 @@ def test_disable_telnet(psr):
             time.sleep(30)
             parser.main()
             log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-            print('log_data: %s' % log_data)
+            print('test_disable_telnet log_data: %s' % log_data)
             if version:
                 assert log_data['latest_matches']['scrapy_version'] == version
             assert log_data['latest_matches']['telnet_console']
@@ -195,7 +195,7 @@ def test_telnet_fail(psr):
         cst.write_text(log_file, globals()[name.upper()])
         parser.main()
         log_data = cst.read_data(re.sub(r'.log$', '.json', log_file))
-        print('log_data: %s' % log_data)
+        print('test_telnet_fail log_data: %s' % log_data)
         if name == 'telnet_151_port_16023':
             assert log_data['latest_matches']['scrapy_version'] == '1.5.1'
             assert log_data['latest_matches']['telnet_console'] == '127.0.0.1:16023'

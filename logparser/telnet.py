@@ -157,6 +157,7 @@ class MyTelnet(Common):
             self.tn.set_debuglevel(logging.DEBUG)
 
     def parse_output(self, text):
+        self.logger.info('parse_output text: ###%s###' % text)
         m = re.search(r'{.+}', text)
         if m:
             result = self.parse_crawler_stats(m.group())
@@ -178,6 +179,7 @@ class MyTelnet(Common):
                     except (TypeError, ValueError):
                         pass
         if result:
+            self.logger.info('parse_output result: ###%s###' % result)
             return self.get_ordered_dict(result, source='telnet')
         else:
             return {}
@@ -202,7 +204,7 @@ class MyTelnet(Common):
         self.tn.sendline(bytes_to_str(TELNETCONSOLE_COMMAND_MAP['log_file']))
         self.tn.expect(re.compile(r'[\'"].+>>>', re.S), timeout=TELNET_TIMEOUT)
         log_file = self.tn.after
-        self.logger.debug("settings['LOG_FILE'] found via telnet: %s", log_file)
+        self.logger.info("settings['LOG_FILE'] found via telnet: ###%s###" % log_file)
         if not self.verify_log_file_path(self.parse_log_path(self.data['log_path']), log_file):
             self.logger.warning("Skip telnet due to mismatching: %s AND %s", self.data['log_path'], log_file)
             return

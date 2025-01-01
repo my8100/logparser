@@ -1,5 +1,15 @@
 Release History
 ===============
+[0.8.3](https://github.com/my8100/logparser/issues?q=is%3Aclosed+milestone%3A0.8.3) (2025-01-01)
+------------------
+- New Features
+  - Support telnet for Python 3.13 [(PR #29)](https://github.com/my8100/logparser/issues/29)
+- Bug Fixes
+  - Fix log parsing issues and update tests [(issue #26)](https://github.com/my8100/logparser/issues/26)
+- Others
+  - Fix CircleCI config on Python image [(PR #27)](https://github.com/my8100/logparser/issues/27)
+
+
 [0.8.2](https://github.com/my8100/logparser/issues?q=is%3Aclosed+milestone%3A0.8.2) (2019-08-04)
 ------------------
 - New Features

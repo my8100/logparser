@@ -4,8 +4,13 @@ import logging
 import os
 import platform
 import re
+from subprocess import Popen, PIPE
 import sys
-from telnetlib import DO, DONT, IAC, SB, SE, Telnet, TTYPE, WILL, WONT
+# DeprecationWarning: 'telnetlib' is deprecated and slated for removal in Python 3.13
+try:
+    import telnetlib
+except ImportError:
+    telnetlib = None
 import traceback
 
 import pexpect
@@ -52,6 +57,20 @@ class MyTelnet(Common):
         self.crawler_stats = {}
         self.crawler_engine = {}
 
+    def _exec_cmd(self, cmd):
+        self.logger.info("_exec_cmd: %s" % cmd)
+        # os.system(cmd)
+        try:
+            p = Popen(cmd.strip(), stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+            output, err = p.communicate(timeout=30)
+            rc = p.returncode
+            output = output.decode('utf-8')
+            err = err.decode('utf-8')
+        except Exception as err:
+            self.logger.warning("Fail to exec cmd '%s': err %s" % (cmd, err))
+        else:
+            self.logger.info("Got result of cmd '%s': rc %s, err %s, output:\n%s" % (cmd, rc, err, output))
+
     def main(self):
         try:
             self.run()
@@ -65,6 +84,7 @@ class MyTelnet(Common):
                               self.host, self.port, self.data['log_path'], self.scrapy_version, err)
             if self.verbose:
                 self.logger.error(traceback.format_exc())
+            self._exec_cmd("telnet %s %s" % (self.host, self.port))
         finally:
             if self.tn is not None:
                 try:
@@ -95,7 +115,7 @@ class MyTelnet(Common):
         self.host = self.OVERRIDE_TELNET_CONSOLE_HOST or self.host
 
         self.logger.debug("Try to telnet to %s:%s for %s", self.host, self.port, self.data['log_path'])
-        if self.telnet_password:
+        if self.telnet_password or telnetlib is None:
             self.setup_pexpect()
             if self.tn is not None:
                 self.pexpect_io()
@@ -107,6 +127,7 @@ class MyTelnet(Common):
     def setup_pexpect(self):
         # Cannot catch error directly here, see main()
         self.tn = pexpect.spawn('telnet %s %s' % (self.host, self.port), encoding='utf-8', timeout=TELNET_TIMEOUT)
+        self.logger.info('setup_pexpect %s' % self.tn)
         # logfile: <open file '<stdout>', mode 'w' at 0x7fe160149150>
         # logfile_read: None
         # logfile_send: None
@@ -117,16 +138,17 @@ class MyTelnet(Common):
 
     @staticmethod
     def telnet_callback(tn, command, option):
-        if command == DO and option == TTYPE:
-            tn.sendall(IAC + WILL + TTYPE)
-            tn.sendall(IAC + SB + TTYPE + '\0' + 'LogParser' + IAC + SE)
-        elif command in (DO, DONT):
-            tn.sendall(IAC + WILL + option)
-        elif command in (WILL, WONT):
-            tn.sendall(IAC + DO + option)
+        if command == telnetlib.DO and option == telnetlib.TTYPE:
+            tn.sendall(telnetlib.IAC + telnetlib.WILL + telnetlib.TTYPE)
+            tn.sendall(telnetlib.IAC + telnetlib.SB + telnetlib.TTYPE + '\0' + 'LogParser' + telnetlib.IAC + telnetlib.SE)
+        elif command in (telnetlib.DO, telnetlib.DONT):
+            tn.sendall(telnetlib.IAC + telnetlib.WILL + option)
+        elif command in (telnetlib.WILL, telnetlib.WONT):
+            tn.sendall(telnetlib.IAC + telnetlib.DO + option)
 
     def setup_telnet(self):
-        self.tn = Telnet(self.host, int(self.port), timeout=TELNET_TIMEOUT)
+        self.tn = telnetlib.Telnet(self.host, int(self.port), timeout=TELNET_TIMEOUT)
+        self.logger.info('setup_telnet %s' % self.tn)
         # [twisted] CRITICAL: Unhandled Error
         # Failure: twisted.conch.telnet.OptionRefused: twisted.conch.telnet.OptionRefused
         # https://github.com/jookies/jasmin-web/issues/2
@@ -135,6 +157,7 @@ class MyTelnet(Common):
             self.tn.set_debuglevel(logging.DEBUG)
 
     def parse_output(self, text):
+        self.logger.info('parse_output text: ###%s###' % text)
         m = re.search(r'{.+}', text)
         if m:
             result = self.parse_crawler_stats(m.group())
@@ -148,12 +171,15 @@ class MyTelnet(Common):
                     result[k] = True
                 elif v == 'False':
                     result[k] = False
+                elif v == 'None':
+                    result[k] = None
                 else:
                     try:
                         result[k] = int(float(v))
                     except (TypeError, ValueError):
                         pass
         if result:
+            self.logger.info('parse_output result: ###%s###' % result)
             return self.get_ordered_dict(result, source='telnet')
         else:
             return {}
@@ -165,16 +191,20 @@ class MyTelnet(Common):
             return src.decode('utf-8')
         # TypeError: got <type 'str'> ('Username: ') as pattern,
         # must be one of: <type 'unicode'>, pexpect.EOF, pexpect.TIMEOUT
-        self.tn.expect(u'Username: ', timeout=TELNET_TIMEOUT)
-        self.tn.sendline(self.telnet_username)
-        self.tn.expect(u'Password: ', timeout=TELNET_TIMEOUT)
-        self.tn.sendline(self.telnet_password)
-        self.tn.expect(u'>>>', timeout=TELNET_TIMEOUT)
+        try:
+            self.tn.expect(u'Username: ', timeout=TELNET_TIMEOUT)
+            self.tn.sendline(self.telnet_username)
+            self.tn.expect(u'Password: ', timeout=TELNET_TIMEOUT)
+            self.tn.sendline(self.telnet_password)
+            self.tn.expect(u'>>>', timeout=TELNET_TIMEOUT)
+        except Exception as err:
+            self.logger.warning("Found error in pexpect_io %s %s: %s" % (self.telnet_username, self.telnet_password, err))
+            raise err
 
         self.tn.sendline(bytes_to_str(TELNETCONSOLE_COMMAND_MAP['log_file']))
         self.tn.expect(re.compile(r'[\'"].+>>>', re.S), timeout=TELNET_TIMEOUT)
         log_file = self.tn.after
-        self.logger.debug("settings['LOG_FILE'] found via telnet: %s", log_file)
+        self.logger.info("settings['LOG_FILE'] found via telnet: ###%s###" % log_file)
         if not self.verify_log_file_path(self.parse_log_path(self.data['log_path']), log_file):
             self.logger.warning("Skip telnet due to mismatching: %s AND %s", self.data['log_path'], log_file)
             return

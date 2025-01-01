@@ -11,7 +11,7 @@ try:
     import telnetlib
 except ImportError:
     telnetlib = None
-    
+
 import traceback
 
 import pexpect

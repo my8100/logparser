@@ -20,6 +20,7 @@ else:
 class Constant(object):
     ON_WINDOWS = platform.system() == 'Windows'
     PY2 = sys.version_info.major < 3
+    PY313 = sys.version_info.major == 3 and sys.version_info.minor == 13
 
     NA = 'N/A'
     LOGPARSER_VERSION = __version__
@@ -154,8 +155,10 @@ class Constant(object):
     def timestamp_to_string(timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-    def sub_process(self, args, block=False, timeout=60):
-        proc = Popen(args.split())
+    def sub_process(self, cmd, block=False, timeout=120):
+        print(time.ctime(), cmd)
+        args = cmd.split()
+        proc = Popen(args)
         if block:
             # TODO: In PY2: TypeError: communicate() got an unexpected keyword argument 'timeout'
             if self.PY2:

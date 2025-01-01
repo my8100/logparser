@@ -17,7 +17,7 @@ def test_telnet(psr):
     print(cwd)
     os.chdir(cst.DEMO_PROJECT_PATH)
     print(os.getcwd())
-    
+
     # ['1.4.0', '1.5.0', '1.5.1', '1.5.2', '1.6.0', 'latest']
     # scrapyd 1.4.3 requires scrapy>=2.0.0
     # py38 supports Scrapy 2.11.2; py39 supports Scrapy 2.12.0
@@ -118,7 +118,7 @@ def test_disable_telnet(psr):
     print(cwd)
     os.chdir(cst.DEMO_PROJECT_PATH)
     print(os.getcwd())
-    
+
     last_update_timestamp = 0
     runtime = 0
     try:
@@ -126,7 +126,7 @@ def test_disable_telnet(psr):
         version = None
         pip_cmd = 'pip install --upgrade scrapy'
         cst.sub_process(pip_cmd, block=True)
-        
+
         for name in ['enable_telnet', 'disable_telnet']:
             enable_telnet = name == 'enable_telnet'
             parser = psr(execute_main=False, enable_telnet=enable_telnet)
@@ -139,7 +139,7 @@ def test_disable_telnet(psr):
             log_file = os.path.join(cst.DEMO_PROJECT_LOG_FOLDER_PATH, '%s.log' % name)
             scrapy_cmd = 'scrapy crawl example -s CLOSESPIDER_TIMEOUT=60 -s LOG_FILE=%s' % log_file
             cst.sub_process(scrapy_cmd)
-            
+
             time.sleep(10)
             print('parser.main 1')
             parser.main()
@@ -151,7 +151,7 @@ def test_disable_telnet(psr):
                 runtime = log_data['crawler_engine']['time()-engine.start_time']
                 print(time.ctime(), 'runtime: %s' % runtime)
                 assert runtime
-                
+
             time.sleep(10)
             print('parser.main 2')
             parser.main()
@@ -163,7 +163,7 @@ def test_disable_telnet(psr):
                 runtime_new = log_data['crawler_engine']['time()-engine.start_time']
                 print(time.ctime(), 'runtime_new: %s' % runtime_new)
                 assert runtime_new > runtime
-                
+
             time.sleep(50)
             print('parser.main 3')
             parser.main()

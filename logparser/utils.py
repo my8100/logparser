@@ -50,7 +50,7 @@ def get_logger(name, level=logging.DEBUG):
     return logger
 
 
-def check_update(timeout=5):
+def check_update(timeout=5, **kwargs):
     logger = get_logger(__name__)
     js = {}
     try:
@@ -59,6 +59,7 @@ def check_update(timeout=5):
         data['py'] = '.'.join([str(n) for n in sys.version_info[:3]])
         data['logparser'] = __version__
         data['scrapy_version'] = scrapy_version
+        data.update(kwargs)
         # print(data)
         url = 'https://my8100.pythonanywhere.com/check_update'
         json_data = json.dumps(data).encode('utf-8')

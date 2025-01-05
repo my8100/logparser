@@ -12,7 +12,7 @@ def test_run_py():
 
 
 def test_check_update():
-    js = check_update(timeout=60)
+    js = check_update(timeout=60, to_ignore=True)
     print(js)
     if js:
         assert 'latest_version' in js and 'info' in js

@@ -9,7 +9,7 @@ try:
 except ImportError:
     scrapy_version = '0.0.0'
 from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import urlopen
+from six.moves.urllib.request import Request, urlopen
 
 from .__version__ import __version__
 from .settings import (SCRAPYD_SERVER, SCRAPYD_LOGS_DIR, PARSE_ROUND_INTERVAL,
@@ -50,7 +50,7 @@ def get_logger(name, level=logging.DEBUG):
     return logger
 
 
-def check_update(timeout=5):
+def check_update(timeout=5, **kwargs):
     logger = get_logger(__name__)
     js = {}
     try:
@@ -59,12 +59,15 @@ def check_update(timeout=5):
         data['py'] = '.'.join([str(n) for n in sys.version_info[:3]])
         data['logparser'] = __version__
         data['scrapy_version'] = scrapy_version
-        if sys.version_info.major >= 3:
-            data = urlencode(data).encode('utf-8', 'replace')
-        else:
-            data = urlencode(data)
-        req = urlopen('https://my8100.herokuapp.com/check_update', data=data, timeout=timeout)
-        text = req.read().decode('utf-8', 'replace')
+        data.update(kwargs)
+        # print(data)
+        url = 'https://my8100.pythonanywhere.com/check_update'
+        json_data = json.dumps(data).encode('utf-8')
+        req = Request(url, data=json_data)
+        req.add_header('Content-Type', 'application/json')
+        with urlopen(req, timeout=timeout) as resp:
+            text = resp.read().decode('utf-8', 'replace')
+        # print(text)
         js = json.loads(text)
         # print(js)
     # except Exception as err:

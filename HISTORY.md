@@ -1,5 +1,10 @@
 Release History
 ===============
+[0.8.4](https://github.com/my8100/logparser/issues?q=is%3Aclosed+milestone%3A0.8.4) (2025-01-05)
+------------------
+- Others
+  - Support allure report on CircleCI [(PR #31)](https://github.com/my8100/logparser/issues/31)
+
 [0.8.3](https://github.com/my8100/logparser/issues?q=is%3Aclosed+milestone%3A0.8.3) (2025-01-01)
 ------------------
 - New Features
